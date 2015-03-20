@@ -1,0 +1,384 @@
+<!-- Dialog/Popup Templates -->
+<script type="text/ng-template" id="marker.html">
+  <div class="marker"><svg width="100%" height="100%">
+    <path d="m0,16h36"
+    class="dash"
+    stroke-dasharray="{{serie.dash}}" 
+    stroke="{{serie.color}}" fill="{{serie.color}}"/>
+    <path
+    transform="translate(18,15.5) scale(1.4)"
+    ng-d="{{serie.symbol | symbolPath}}" 
+    stroke="{{serie.color}}" fill="{{serie.color}}"/>
+  </svg></div>
+</script>
+<script type="text/ng-template" id="markerEditorhtml">
+  <div class="markerEditor clearfix" ng-show="markerEditor.serie != undefined" ng-style="{top:markerEditor.top, left:markerEditor.left}">
+    <div class="color" ng-repeat="color in markerEditor.colors" 
+      ng-class="{'selected': markerEditor.serie.color==color}" ng-style="{'background-color': color}"
+       ng-click="serie.color=color"></div>
+    <div class="color" ng-repeat="symbol in markerEditor.symbols"
+    ng-class="{'selected': markerEditor.serie.symbol==symbol}"
+    ng-click="serie.symbol=symbol">
+      <svg width="100%" height="100%" viewBox="-8 -8 16 16">
+        <path ng-d="{{symbol | symbolPath}}" 
+        stroke="{{markerEditor.serie.color}}" fill="{{markerEditor.serie.color}}"/>
+      </svg>
+    </div>
+    <div class="color" ng-repeat="dash in markerEditor.dashs"
+    ng-class="{'selected': markerEditor.serie.dash==dash}"
+    ng-click="serie.dash=dash">
+      <svg width="100%" height="100%" viewBox="0 0 32 32">
+        <path d="m0,16h64"
+        class="dash"
+        stroke-dasharray="{{dash}}" 
+        stroke="{{markerEditor.serie.color}}" fill="{{markerEditor.serie.color}}"/>
+      </svg>
+    </div>
+  </div>
+</script>
+<script type="text/ng-template" id="optionsDialog">
+  <a ui-if="!loggedInUser" ng-click="dialog.login=true">sign in</a>
+  <a ui-if="loggedInUser" ng-click="logout()">{{loggedInUser.username}} logout</a>
+  <p><label>Marker size</label><input type="range" from="8" to="18" ng-model="profile.markerSize" /> {{profile.markerSize}}</p>
+  <p><label>Export data</label><button class="btn btn btn-success" ng-click="downloadCSV()">Download CSV</button>
+  <button class="btn btn btn-success" ng-click="downloadJSON()">Download JSON</button></p>
+</script>
+
+<!-- header -->
+<div id="header" class="clearfix">
+  <div class="hleft">
+    <h1 ui-jq="tooltip" data-original-title="{{chart.editCode && 'Click to change title' || ''}}" ng-click="!chart.editCode || showEditTitle()" ng-bind="chart.title || locale.chartUntitled" ng-class="{'untitled':chart.title == false}"></h1>
+    <button ui-jq="tooltip" title="Open recent canvas" class="btn btn-link" ng-click="dialog.recent=true"><i class="icon-folder-open-alt icon-2x"></i></button>
+    <button ui-jq="tooltip" title="Create new canvas" class="btn btn-link" rel="nofollow" ng-click="showNewCanvasAlert()"><i class="icon-file-alt icon-2x"></i></button>
+    <button ui-jq="tooltip" title="Copy this canvas and edit it" class="btn btn-link" rel="nofollow" ng-click="showCopyCanvasAlert()"><i class="icon-copy icon-2x"></i></button>
+    <button ui-jq="tooltip" title="Handbook" class="btn btn-link" style="font-size:10px;margin-top:3px;" ng-click="dialog.handbook=true"><i class="icon-question-sign icon-3x"></i></button>
+    <button ui-jq="tooltip" title="Give feedback / Get support"  class="btn btn-link" ng-click="showSupport($event)"><i class="icon-bullhorn icon-2x"></i></button>
+    <span  id="getsat-widget-4466" class="hide"></span>
+    <span ng-cloack class="view-only-label no-select" ng-hide="chart.editCode">View only</span>
+  </div>
+  <div class="hright" ng-class="{'chat-visible': chat.messages.length > 0 || connectedChatUsers() > 0}">
+    <button class="btn btn-primary" ng-click="dialog.share=true"><i class="icon-link"></i> Share</button>	
+  </div>
+  <div id="profile" my-options><a>Options <i class="icon-caret-down"></i></a></div>
+  <div ng-cloack id="chat-toggle" class="clearfix" ng-class="{'got-new-msg': chat.gotNewMsg}"
+    ng-show="chat.messages.length > 0 || connectedChatUsers() > 0"
+    ui-toggle="chat.isVisible" ng-click="chat.isVisible = !chat.isVisible;chat.gotNewMsg=false">
+    <i class="icon-caret-right" ng-hide="chat.isVisible"></i>
+    <i class="icon-caret-down" ng-show="chat.isVisible"></i>
+    <ng-pluralize count="connectedChatUsers()"
+                    when="{'0': 'No other viewers',
+                           'one': '1 other viewer',
+                           'other': '{} other viewers'}"></ng-pluralize>
+    <i class="icon-comments-alt"></i>
+  </div>
+</div>
+
+<!-- menu bar -->
+<div id="legends" class="clearfix"  ng-class="{'chat-visible': chat.isVisible, 'no-edit': !chart.editCode}">
+  <div ng-repeat="serie in chart.series | orderBy:'business'" class="legend" ng-class="{'selected': chart.series.indexOf(serie) == chart.series.length-1}">
+    <div class="selector" ng-click="manualMoveSerieToTop(serie)" ng-mouseenter="mycolor=serie.color"
+     ng-init="mycolor='#e3e3e3'"
+     ng-mouseleave="mycolor='#e3e3e3'" ng-style="{'color': chart.series.indexOf(serie) == chart.series.length-1 && serie.color || mycolor}"><i class="icon-pencil" ></i></div>
+    <div my-marker serie="serie" marker-editor="markerEditor"></div><span ng-click="!chart.editCode || showRemoveDialog('serie', serie)">{{serie.business}}</span>
+  </div>
+  <div ng-show="chart.editCode" class="legend new-legend" ng-click="!chart.editCode || showValueCurveDialog()" ui-jq="tooltip" title="Click to add a new value curve">
+    <div class="marker"><svg width="100%" height="100%" >
+      <path d="m0,16h36"
+      class="dash"
+      stroke-dasharray="{{temp.serie.dash}}" 
+      stroke="{{temp.serie.color}}" fill="{{temp.serie.color}}"/>
+      <path
+      transform="translate(18,15.5) scale(1.4)"
+      ng-d="{{temp.serie.symbol | symbolPath}}" 
+      stroke="{{temp.serie.color}}" fill="{{temp.serie.color}}"/>
+    </svg></div><span>New</span>
+  </div>
+</div>
+
+<!-- note pan -->
+<div id="description" style="position:relative;" ng-style="{'width': notes.width}" my-draggable="notes.width">
+  <pre ui-if="!chart.editCode" class="description-text" ng-bind="chart.description"></pre>
+  <textarea ui-if="chart.editCode" class="description-text"
+      ui-event="{keyup: 'notifyChartDescription()'}"
+     placeholder="Add your notes" ng-model="chart.description"></textarea>
+  <div id="description-handler" class="no-select handler" ng-click="notes.width = notes.width=='0' && notes.widthOpen || '0'"><div>Notes</div></div>
+</div>
+
+<!-- main area chart -->
+<div my-chart id="mychart"  ng-class="{'chat-visible': chat.isVisible, 'no-edit': !chart.editCode}"></div>
+
+
+<!-- Modal -->
+<div ui-modal ng-model="dialog.editTitle" data-backdrop="static" style="width:420px;margin-left:-210px;top:25%" class="modal hide" tabindex="-1" role="dialog">
+  <form name="form0">
+    <div class="modal-header">
+      <button type="button" class="close" ng-click="dialog.editTitle=false" aria-hidden="true"><i class="icon-remove"></i></button>
+      <div>Rename canvas</div>
+    </div>
+    <div class="modal-body">
+      <label>Enter a new name</label>
+      <input style="width:345px" type="text" ng-model="temp.chartTitle" name="title" autofocus ui-keydown="{'enter':'notifyChartOption()'}" required="required"/>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-primary" ng-click="notifyChartOption()" ng-disabled="form0.$invalid">Save</button>
+      <button class="btn" ng-click="dialog.editTitle=false" aria-hidden="true">Cancel</button>
+    </div>
+  </form>  
+</div>
+
+<div ui-modal ng-model="dialog.valueCurve" data-backdrop="static" style="width:420px;margin-left:-210px;top:25%" class="modal hide" tabindex="-1" role="dialog">
+  <div class="modal-header">
+    <button type="button" class="close" data-dismiss="modal" aria-hidden="true"><i class="icon-remove"></i></button>
+    <div>Add a new value curve</div>
+  </div>
+  <div class="modal-body">
+  <form name="form1">
+    <label>Enter a name</label>
+    <input ng-show="!advancedEntry" name="business" style="width:345px" type="text" required ui-validate="{inuse:businessNotInUse}" ng-model="temp.serie.business" autofocus ui-keydown="{'enter':'form1.$invalid || addSerie()'}" />
+    <p ng-show="form1.business.$error.inuse" class="invalid">Name already in use on this canvas!</p>
+    <textarea style="width:345px;height:130px" ng-model="temp.serie.business" ng-show="advancedEntry"></textarea>
+    <p ng-show="advancedEntry" ><span class="label label-info">Info</span> enter one value curve name per line</p>
+    <a href ng-click="advancedEntry=!advancedEntry" ng-bind="advancedEntry && 'Switch to normal mode' || 'Switch to advanced mode'"></a>
+   </form>
+  </div>
+  <div class="modal-footer">
+    <button class="btn btn-primary" ng-click="addSerie()"  ng-disabled="form1.$invalid">Add</button>
+    <button class="btn" data-dismiss="modal" aria-hidden="true">Cancel</button>
+  </div>
+</div>
+
+<div ui-modal ng-model="dialog.add" data-backdrop="static" style="width:420px;margin-left:-210px;top:25%" class="modal hide" tabindex="-1" role="dialog">
+  <div class="modal-header">
+    <button type="button" class="close" data-dismiss="modal" aria-hidden="true"><i class="icon-remove"></i></button>
+    <div>Add a new factor</div>
+  </div>
+  <div class="modal-body">
+  <form name="form4">
+    <label>Enter a name</label>
+    <input ng-show="!advancedEntry" name="factor" style="width:345px" type="text" required ui-validate="{inuse:factorNotInUse}" ng-model="temp.factor.name" autofocus ui-keydown="{'enter':'form.$invalid || addFactor()'}" />
+    <p ng-show="form4.factor.$error.inuse" class="invalid">Name already in use on this canvas!</p>
+    <textarea style="width:345px;height:130px" ng-model="temp.factor.name" ng-show="advancedEntry"></textarea>
+	<p ng-show="advancedEntry"><span class="label label-info">Info</span> enter one factor name per line</p>
+    <a href ng-click="advancedEntry=!advancedEntry" ng-bind="advancedEntry && 'Switch to normal mode' || 'Switch to advanced mode'"></a>
+   </form>
+  </div>
+  <div class="modal-footer">
+    <button class="btn btn-primary" ng-click="addFactor()"  ng-disabled="form4.$invalid">Add</button>
+    <button class="btn" data-dismiss="modal" aria-hidden="true">Cancel</button>
+  </div>
+</div>
+
+<div ui-modal ng-model="dialog.remove" data-backdrop="static" style="width:420px;margin-left:-210px;top:25%" class="modal hide" tabindex="-1" role="dialog">
+  <div class="modal-header">
+    <button type="button" class="close" data-dismiss="modal" aria-hidden="true"><i class="icon-remove"></i></button>
+    <div>Rename / remove <i ng-bind="temp.remove.name"></i></div>
+  </div>
+  <div class="modal-body">
+  <form name="form3">
+  	<input name="newname" style="width:345px" type="text" ng-model="temp.remove.newname" autofocus  ui-keydown="{'enter':'temp.remove.update()'}" required="required"/>
+    <p style="font-size: 12px;" ><span class="label label-info">info</span> Removing does not delete the associated data.<br/>
+    <span>You can add <i ng-bind="temp.remove.name"></i>
+    again to the canvas and see it again.</span></p>
+    <p  style="font-size: 12px;" class="text-warning"><span class="label label-warning">warn</span> Renaming will overwrite any existing values.</p>
+</form>    
+  </div>
+  <div class="modal-footer">
+    <button class="btn btn-warning" ng-click="temp.remove.update()">Update</button>
+    <button class="btn btn-primary" ng-click="temp.remove.remove()">Remove</button>
+    <button class="btn" ng-click="dialog.remove=false" aria-hidden="true">Cancel</button>
+  </div>
+</div>
+
+<div ui-modal ng-model="dialog.notfound" data-backdrop="static" style="width:420px;margin-left:-210px;top:25%" class="modal hide" tabindex="-1" role="dialog">
+  <div class="modal-header">
+    <div>404 Not Found</div>
+  </div>
+  <div class="modal-body">
+    <h5>Sorry, but the canvas you were looking for seems not to exist.</h5>
+    <p>Do you want to create a new one?</p>
+  </div>
+  <div class="modal-footer">
+    <button class="btn btn-primary" ng-click="createNewChart()">Create new canvas</button>
+    <button class="btn" ng-click="dialog.recent=true">List recent canvas</button>
+  </div>
+</div>
+
+<div ui-modal ng-model="dialog.permissiondenied" data-backdrop="static" style="width:420px;margin-left:-210px;top:25%" class="modal hide" tabindex="-1" role="dialog">
+  <div class="modal-header">
+    <div>Access denied</div>
+  </div>
+  <div class="modal-body">
+    <h5>Sorry, you do not seem to have the required permissions to access the requested canvas.</h5>
+    <p>Do you want to create a new one?</p>
+  </div>
+  <div class="modal-footer">
+    <button class="btn btn-primary" ng-click="createNewChart()">Create new canvas</button>
+    <button class="btn" ng-click="dialog.recent=true">List recent canvas</button>
+  </div>
+</div>
+
+<div ui-modal ng-model="dialog.login" data-backdrop="static" style="width:420px;margin-left:-210px;top:25%" class="modal hide" tabindex="-1" role="dialog">
+  <div class="modal-header">
+    <div>Login</div>
+  </div>
+  <div class="modal-body" style="text-align: center;line-height: 40px;">
+    <button ng-click="loginWith('facebook')" class="zocial facebook">Sign in with Facebook</button>
+    <button ng-click="loginWith('google2')" class="zocial googleplus">Sign in with Google</button>
+    <button ng-click="loginWith('linkedin')" class="zocial linkedin">Sign in with LinkedIn</button>
+  </div>
+  <div class="modal-footer">
+    <button class="btn" ng-click="ng-click">Cancel</button>
+  </div>
+</div>
+
+<div ui-modal ng-model="dialog.disconnected" data-backdrop="static" style="width:420px;margin-left:-210px;top:25%" class="modal hide" tabindex="-1" role="dialog">
+  <div class="modal-header">
+    <div>Lost Connection to Server</div>
+  </div>
+  <div class="modal-body">
+    <p>Do you want to try to reconnect?</p>
+    <p class="text-info">You can also try to reload the page.</p>
+  </div>
+  <div class="modal-footer">
+    <button class="btn btn-primary" ng-click="grailsEvents.open()">Retry</button>
+  </div>
+</div>
+
+<div ui-modal ng-model="dialog.alert" data-backdrop="static" style="width:420px;margin-left:-210px;top:25%" class="modal hide" tabindex="-1" role="dialog">
+  <div class="modal-header">
+    <div>{{temp.alertdialog.title}}</div>
+  </div>
+  <div class="modal-body">
+    <p>{{temp.alertdialog.msg}}</p>
+  </div>
+  <div class="modal-footer">
+    <button class="btn btn-primary" ng-click="temp.alertdialog.action()">{{temp.alertdialog.ok}}</button>
+    <button class="btn" ng-click="dialog.alert=false">Cancel</button>
+  </div>
+</div>
+
+
+<div ui-modal ng-model="dialog.share" data-backdrop="static" style="width:500px;margin-left:-250px;top:25%" class="modal hide" tabindex="-1" role="dialog">
+  <div class="modal-header">
+    <button type="button" class="close" data-dismiss="modal" aria-hidden="true"><i class="icon-remove"></i></button>
+    <div>Sharing options</div>
+  </div>
+  <div class="modal-body">
+    <label>Link to share for view mode</label>
+    <div class="input" style="width:426px" type="text" my-copy-input>{{baseUri}}#/{{chart.viewCode}}</div>
+    <div>
+      <span class='st_email_large' displayText='Email' st_url="{{baseUri}}#/{{chart.viewCode}}" st_title="StrategyCanvas.org: {{chart.title}}"></span>
+      <span class='st_twitter_large' displayText='Tweet' st_url="{{baseUri}}#/{{chart.viewCode}}" st_title="StrategyCanvas.org: {{chart.title}}"></span>
+      <span class='st_facebook_large' displayText='Facebook' st_url="{{baseUri}}#/{{chart.viewCode}}" st_title="StrategyCanvas.org: {{chart.title}}"></span>
+      <span class='st_linkedin_large' displayText='LinkedIn' st_url="{{baseUri}}#/{{chart.viewCode}}" st_title="StrategyCanvas.org: {{chart.title}}"></span>
+      <span class='st_googleplus_large' displayText='Google +' st_url="{{baseUri}}#/{{chart.viewCode}}" st_title="StrategyCanvas.org: {{chart.title}}"></span>
+      <span class='st_evernote_large' displayText='Evernote' st_url="{{baseUri}}#/{{chart.viewCode}}" st_title="StrategycCanvas.org: {{chart.title}}"></span>
+    </div>
+    <div ng-show="chart.editCode">
+      <hr/>
+      <label>Link for edit mode (live collaboration)</label>
+      <div class="input" style="width:426px" type="text" my-copy-input>{{baseUri}}#/edit/{{chart.editCode}}</div>
+    </div>
+  </div>
+  <div class="modal-footer">
+    <button class="btn btn-primary" ng-click="dialog.share=false">Done</button>
+  </div>
+</div>
+
+<div id="handbook" ui-modal ng-model="dialog.handbook" data-backdrop="true" style="width:900px;margin-left:-450px;margin-top:60px;top:0;" class="modal hide" tabindex="-1" role="dialog">
+  <div class="modal-header">
+    <button type="button" class="close" data-dismiss="modal" aria-hidden="true"><i class="icon-remove"></i></button>
+    <div style="font-size:24px">Handbook</div>
+  </div>
+  <div class="modal-body" style="min-height:316px">
+    <div class="well menu">
+      <ul class="nav nav-list">
+        <li ng-repeat="page in handbook.pages" ng-class="{'active': handbook.activePage == page, 'nav-header': !page.url}"
+         ng-switch on="page.url"><span ng-switch-when="false" ng-bind="page.name"></span>
+         <a ng-switch-default ng-bind="page.name" ng-click="handbook.activePage =  page"></a></li>
+      </ul>
+    </div>  
+    <div ng-include src="handbook.urlPrefix + handbook.activePage.url" class="handbook-content"></div>
+    <div ng-show="handbook.activePage.name=='Who'"  class="handbook-content">
+      <h3>Who</h3>
+      <p>Boris Fritscher doctoral student at</p>
+      <p><a href="http://hec.unil.ch/"><img src="/images/unilogo_bleu_72dpi.png" /></a></p>    
+      <div>
+        <script type="IN/MemberProfile" data-id="http://www.linkedin.com/in/borisfritscher" data-format="inline" data-related="false"></script>
+      </div>
+    </div>  
+    <div ng-show="handbook.activePage.name=='Good, bad, bugs'" class="handbook-content">
+      <h3>Feedback</h3>
+    </div>
+  </div>
+  <div class="modal-footer">
+    <button class="btn btn-primary" ng-click=dialog.handbook=false>Done</button>
+  </div>
+</div>
+
+<div id="dialog-recent" ui-modal ng-model="dialog.recent" data-backdrop="static" style="width:500px;margin-left:-250px;top:15%" class="modal hide" tabindex="-1" role="dialog">
+  <div class="modal-header" style="padding-bottom:0;padding-right:30px">
+    <button type="button" class="close" data-dismiss="modal" aria-hidden="true" style="margin-right:-15px"><i class="icon-remove"></i></button>
+    <h4>Open recent canvas</h4>
+    <div class="well" style="padding:5px;margin:20px 0 0 0">
+      <input class="input-block-level" type="text" placeholder="Filter" ng-model="temp.recentfilter" style="margin:0"/>
+    </div>
+    <table class="table table-hover no-select" style="margin:0">
+      <thead>
+        <tr>
+          <th>Title</th>
+          <th>Last Accessed</th>
+          <th>Rights</th>
+        </tr>
+      </thead>
+    </table>
+  </div>
+  <div class="modal-body" style="padding-top:0;padding-right:15px;"> 
+    <table class="table table-hover no-select" style="cursor:pointer">
+      <tbody>
+        <tr ng-repeat="item in localDS.charts | filter:temp.recentfilter" ng-click="gotoChart(item)">
+          <td ng-bind="item.title || locale.chartUntitled" ></td>
+          <td ng-bind="item.timestamp | fromNow"></td>
+          <td><i ui-jq="tooltip"  data-original-title="{{item.editCode && 'Edit' || 'View only'}}" ng-class="{'icon-eye-open': !item.editCode, 'icon-pencil': item.editCode}"></i></td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+  <div class="modal-footer" style="padding-top:15px">
+    <button class="btn btn-link" style="float:left" ng-click="localDS.clear()">Clear list</button>
+    <button class="btn btn-primary" ng-click="dialog.recent=false">Done</button>
+  </div>
+</div>
+
+<!-- SideBar chat -->
+<div id="chat-sidebar" ng-show="chat.isVisible">
+  <div id="chat-content">
+    <div id="chat-header">
+      <div class="user" ng-repeat="user in chat.round[chat.actif]" ng-hide="chat.id == user.id" ng-class="{'can-edit': user.edit}">{{user.name}}</div>
+    </div>
+    <div class="messages">
+      <div class="message {{msg.type}}" ng-class="{'can-edit': msg.user.edit}" ng-repeat="msg in chat.messages"><i ng-class="{'icon-eye-open': !msg.user.edit}" ></i><span>{{msg.user.name}}</span> {{msg.text}}</div>
+    </div>
+  </div>
+  <div id="chat-footer">
+    <textarea placeholder="Type here to chat" ng-model="chat.myMsg" ui-keydown="{'enter':'sendChatMessage($event)'}"></textarea>
+  </div>
+</div>
+
+<script type="text/javascript">
+var switchTo5x=true;
+(function() {
+    var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+    ga.onload = function(){
+    	stLight.options({publisher: "20ff68e5-3e3e-44ee-89f1-e1d3159c7ce0",
+    		tracking:'google',
+    		doneScreen: false,
+    		onhover: false,
+    		doNotHash: true, doNotCopy: true, hashAddressBar: false});
+    	stLight.onReady()
+    };
+    ga.src = 'http://w.sharethis.com/button/buttons.js';
+    var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+})();    
+</script>
+<script src="//platform.linkedin.com/in.js" type="text/javascript"></script>
