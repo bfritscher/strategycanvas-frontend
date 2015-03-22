@@ -14,7 +14,9 @@
     "d3": "~3.5.5",
     "jquery.dragscrollable": "git@github.com:mvlandys/jquery.dragscrollable.git",
     "jquery": "~2.1.3",
-    "jquery-mousewheel": "~3.1.12"
+    "jquery-mousewheel": "~3.1.12",
+    "angular-material": "master",
+    "mdi": "~0.9.72-alpha"
   },
   "devDependencies": {
     "angular-mocks": "^1.3.0"

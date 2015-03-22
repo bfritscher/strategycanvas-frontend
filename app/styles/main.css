@@ -1,159 +1,7 @@
 @charset "UTF-8";
 
-body{
-	-ms-content-zooming: none;
-}
 
-input.ng-invalid:focus{
-  border-color: #e9322d;
-  -webkit-box-shadow: 0 0 6px #f8b9b7;
-     -moz-box-shadow: 0 0 6px #f8b9b7;
-          box-shadow: 0 0 6px #f8b9b7;
-}
-
-
-div.input{
-	background-color: #ffffff;
-	border: 1px solid #cccccc;
-	-webkit-box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.075);
-	-moz-box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.075);
-	box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.075);
-	-webkit-transition: border linear 0.2s, box-shadow linear 0.2s;
-	-moz-transition: border linear 0.2s, box-shadow linear 0.2s;
-	-o-transition: border linear 0.2s, box-shadow linear 0.2s;
-	transition: border linear 0.2s, box-shadow linear 0.2s;
-border-color: rgba(82, 168, 236, 0.8);
-outline: 0;
-outline: thin dotted 9;
--webkit-box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.075), 0 0 8px rgba(82, 168, 236, 0.6);
--moz-box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.075), 0 0 8px rgba(82, 168, 236, 0.6);
-box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.075), 0 0 8px rgba(82, 168, 236, 0.6);	
-display: inline-block;
-height: 20px;
-padding: 4px 6px;
-margin-bottom: 10px;
-font-size: 14px;
-line-height: 20px;
-color: #555555;
-vertical-align: middle;
-}
-
-p.invalid{
-	color: #e9322d;
-}
-
-.modal {
-	-webkit-border-radius: 0;
-    -moz-border-radius: 0;
-	border-radius: 0;
-}
-
-.modal form{
-	margin: 0;
-}
-
-.modal-backdrop{
-	background-color: #fff;
-}
-
-select, textarea, input[type="text"], input[type="password"], input[type="datetime"], input[type="datetime-local"], input[type="date"], input[type="month"], input[type="time"], input[type="week"], input[type="number"], input[type="email"], input[type="url"], input[type="search"], input[type="tel"], input[type="color"], .uneditable-input{
--webkit-border-radius: 0;
--moz-border-radius: 0;
-border-radius: 0;	
-}
-
-.modal-header, .modal-body, .modal-footer {
-	padding-left: 30px;
-	padding-right: 30px;
-	background-color: #fff;
-	border: none;
-}
-.modal-header{
-	padding-right: 15px;
-}
-
-.modal-header > div{
-	padding-top: 18px;
-	font-size: 16px;
-}
-
-.modal-footer {
-	padding-top: 0; 
-	padding-bottom: 30px;
-}
-
-.modal-footer .btn{
-	min-width: 72px;
-}
-
-.modal-footer .btn + .btn{
-	margin-left: 10px;
-}
-
-.btn {
-	font-weight: bold;
-	font-size: 11px;
-	text-shadow: none;
-	background-image: none;
-	-webkit-border-radius: 2px;
-	-moz-border-radius: 2px;
-	border-radius: 2px;
-}
-
-.btn-primary {
-	background-image: none;
-}
-
-.table-hover tbody tr:hover > td, .table-hover tbody tr:hover > th {
-	background-color: #fcf8e3;
-}
-
-#handbook .modal-body{
-	max-height: none;
-}
-
-#handbook .menu{
-	width: 170px;
-	padding: 8px 0;
-	position:fixed;
-}
-
-#handbook .handbook-content{
-	margin-left:195px;
-	width: 600px;
-	margin-top:-8px;
-}
-
-#handbook .handbook-content h4{
-	margin-top: 40px;	
-}
-
-#handbook .handbook-content .frame{
-	padding: 10px;
-	border: 1px solid #eee;
-}
-
-#profile a{
-	color: #666;
-}
-
-#profile a:hover{
-	text-decoration: none;
-}
-
-#profile + .popover{
-	left: auto !important;
-	right: 10px;
-}
-#profile + .popover.bottom .arrow{
-	left: auto;
-	right: 8px;
-}
-
-#profile + .popover .popover-title{
-	display: none;
-}
-
+/*
 .marker + .popover .popover-title{
 	display: none;
 }
@@ -164,97 +12,191 @@ border-radius: 0;
 	-moz-border-radius: 0;
 	border-radius: 0;
 }
+*/
+
+.no-transform{
+  text-transform: none;
+}
+
+.no-cursor{
+  cursor: default;
+}
+
+.handbook button.md-button{
+  display:block;
+  width: 100%;
+  text-align: left;
+  padding-left: 20px;
+}
 
 body{
-	background-color: #ebebeb;
+  background-color: #ebebeb;
+  -ms-content-zooming: none;
+  overflow: hidden;
 }
 
-svg body{
-	background-color: #fff;
-}
-
-svg .mainaxis{
-	
-}
-
-#description{
-	width:250px;
-	float:left;
-	background-color: #fff;
-	padding-right: 20px;
-	border-right: 1px solid #e5e5e5;
-}
-
-#description .description-text{
-	padding: 10px;
-	overflow-x: auto;
-	word-wrap:break-word;
-	width: 100%;
-	width: -moz-calc(100% - 20px);
-	width: -webkit-calc(100% - 20px);
-	width: -o-calc(100% - 20px);
-	width: calc(100% - 20px);
-	border: none;
-	margin: 0;
-	font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
-	font-size: 14px;
-	line-height: 20px;
-	background-color: #fff;
-	color: #555555;
-	height: 600px;
-}
-
-#description .description-text:focus, #description .description-text{
-	-webkit-box-shadow: none;
-	-moz-box-shadow: none;
-	box-shadow: none;
-}
-
-#description-handler{
-	width:20px;
-	height:100%;
-	background-color: #f5f5f5;
-	position:absolute;
-	right:0;
-	top:0;
-	border-left: 1px solid #e5e5e5;
-	cursor: col-resize;
-}
-
-#description-handler div{
-	-webkit-transform: rotate(-90deg);
-	-moz-transform: rotate(-90deg);
-	transform: rotate(-90deg);
-	margin-top: 30px;
-	cursor: pointer;
-}
-
-#mychart{
-	display:block;
-	text-align: center;
-	overflow: auto;
-	position: relative;
-}
-
-
-#mychart div.iexlegend{
-	position: absolute;
-}
-
-#mychart svg{
-	border: 1px #dadada solid;
-	background-color: #fff;
-	padding: 20px 20px 20px 20px;
-	margin: 10px 10px 10px 10px;
-	cursor: default;
-}
-
-#mychart.chat-visible{
-	margin-right: 250px;
+.mdi{
+  font-size: 24px;
 }
 
 svg {
   font-size: 14px;
+}
+
+svg .mainaxis{
+}
+
+svg .legendbackground{
+  fill: #fff;
+  shape-rendering: crispEdges;
+}
+
+svg body{
+  background-color: #fff;
+  position: initial;
+}
+
+svg .dot rect{
+  opacity:0;
+}
+
+svg  rect.backgroundFactor{
+  opacity:1;
+}
+
+
+svg rect.border{
+  stroke-width: 2px;
+  stroke: #adc8e3;
+  fill: #fbfbfb;
+  shape-rendering: crispEdges;
+}
+
+svg .factor{
+  -ms-touch-action: none;
+}
+
+svg .factorSize{
+  cursor: col-resize;
+}
+
+svg rect.factorSize{
+  fill: none;
+  stroke: none;
+  pointer-events: all;
+}
+
+svg g.addfactor{
+  cursor: pointer;
+}
+
+svg g.addfactor:hover text{
+  fill: #e3e3e3 !important;
+}
+
+input.ng-invalid:focus{
+  border-color: #e9322d;
+  -webkit-box-shadow: 0 0 6px #f8b9b7;
+     -moz-box-shadow: 0 0 6px #f8b9b7;
+          box-shadow: 0 0 6px #f8b9b7;
+}
+
+p.invalid{
+  color: #e9322d;
+}
+
+#description{
+  float:left;
+  background-color: #fff;
+  padding-right: 40px;
+  border-right: 1px solid #e5e5e5;
+  position:relative;
+}
+#description.animate{
+  transition: all 0.4s cubic-bezier(0.25, 0.8, 0.25, 1); 
+}
+
+#description .description-text{
+  padding: 10px;
+  overflow-x: auto;
+  word-wrap:break-word;
+  width: 100%;
+  width: -moz-calc(100% - 40px);
+  width: -webkit-calc(100% - 40px);
+  width: -o-calc(100% - 40px);
+  width: calc(100% - 40px);
+  border: none;
+  margin: 0;
+  font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+  font-size: 14px;
+  line-height: 20px;
+  background-color: #fff;
+  color: #555555;
+}
+
+#description .description-text:focus, #description .description-text{
+  -webkit-box-shadow: none;
+  -moz-box-shadow: none;
+  box-shadow: none;
+}
+
+#description-handler{
+  width: 40px;
+  height:100%;
+  background-color: #f5f5f5;
+  position:absolute;
+  right:0;
+  top:0;
+  border-left: 1px solid #e5e5e5;
+  cursor: col-resize;
+}
+
+#description-handler div{
+  -webkit-transform: rotate(-90deg);
+  -moz-transform: rotate(-90deg);
+  transform: rotate(-90deg);
+  margin-top: 30px;
+  cursor: pointer;
+}
+
+#mychart{
+  display:block;
+  text-align: center;
+  overflow: auto;
+  position: relative;
+}
+
+
+#mychart div.iexlegend{
+  position: absolute;
+}
+
+#mychart svg{
+  border: 1px #dadada solid;
+  background-color: #fff;
+  padding: 20px 20px 20px 20px;
+  margin: 10px 10px 10px 10px;
+  cursor: default;
+}
+
+#mychart.chat-visible{
+  margin-right: 250px;
+}
+
+#mychart.no-edit .axis .domain{
+  cursor: default;
+}
+#mychart.no-edit .axis text, #mychart.no-edit .dot{
+  cursor: default;
+}
+#mychart.no-edit .xlegend, #mychart.no-edit .iexlegend{
+  cursor: default;
+}
+#mychart.no-edit svg .factorSize{
+  cursor: default;
+}
+#mychart.no-edit svg g.addfactor{
+  cursor: default;
 }
 
 .foreground path {
@@ -268,22 +210,13 @@ svg {
   stroke-opacity: .05;
 }
 
-svg .legendbackground{
-	fill: #fff;
-  	shape-rendering: crispEdges;
-}
-
-.axis{
-
+.dash{
+  stroke-width: 6;
 }
 
 .axis .domain{
-	opacity: 0;
-	cursor: pointer;
-}
-
-#mychart.no-edit .axis .domain{
-	cursor: default;
+  opacity: 0;
+  cursor: pointer;
 }
 
 .axis line, .axis path {
@@ -298,19 +231,11 @@ svg .legendbackground{
   cursor: move;
 }
 
-#mychart.no-edit .axis text, #mychart.no-edit .dot{
-	cursor: default;
-}
-
 .xlegend, .iexlegend{
-	font-weight: 600;
-	text-align: center;
-	word-wrap:break-word;
-	cursor: pointer;
-}
-
-#mychart.no-edit .xlegend, #mychart.no-edit .iexlegend{
-	cursor: default;
+  font-weight: 600;
+  text-align: center;
+  word-wrap:break-word;
+  cursor: pointer;
 }
 
 .markerEditor{
@@ -318,247 +243,178 @@ svg .legendbackground{
 }
 
 .markerEditor .color {
-	float: left;
-	width: 24px;
-	height: 24px;
-	border: 2px solid #fff;
-	overflow: hidden;
+  float: left;
+  width: 24px;
+  height: 24px;
+  border: 2px solid #fff;
+  overflow: hidden;
 }
 
 .markerEditor .color.selected{
-	border-color: #adc8e3;
-}
-
-.dash{
-	stroke-width: 6;
-}
-
-svg .dot rect{
-	opacity:0;
-}
-
-svg  rect.backgroundFactor{
-	opacity:1;
-}
-
-
-svg rect.border{
-	stroke-width: 2px;
-	stroke: #adc8e3;
-	fill: #fbfbfb;
-	shape-rendering: crispEdges;
-}
-
-svg .factor{
-	-ms-touch-action: none;
-}
-
-svg .factorSize{
-	cursor: col-resize;
-}
-
-#mychart.no-edit svg .factorSize{
-	cursor: default;
-} 
-
-svg rect.factorSize{
-	fill: none;
-	stroke: none;
-	pointer-events: all;
-}
-
-svg g.addfactor{
-	cursor: pointer;
-}
-#mychart.no-edit svg g.addfactor{
-	cursor: default;
-} 
-
-svg g.addfactor:hover text{
-	fill: #e3e3e3 !important;
+  border-color: #adc8e3;
 }
 
 .no-select{
-	-webkit-user-select: none;
-	-khtml-user-select: none;
-	-moz-user-select: none;
-	-o-user-select: none;
-	user-select: none;
-	-webkit-tap-highlight-color: rgba(0,0,0,0);
-	cursor: default;
+  -webkit-user-select: none;
+  -khtml-user-select: none;
+  -moz-user-select: none;
+  -o-user-select: none;
+  user-select: none;
+  -webkit-tap-highlight-color: rgba(0,0,0,0);
+  cursor: default;
 }
 
 [my-click]{
-	-webkit-tap-highlight-color: rgba(0,0,0,0);
+  -webkit-tap-highlight-color: rgba(0,0,0,0);
 }
 
-#header{
-	position: relative;
-	padding-left: 44px;
-	background-color: #fff;
+header h1{
+  margin: 0 20px 0 0;
+  text-overflow:ellipsis;
+  overflow: hidden;
+  white-space: nowrap;
+  max-width: 70%;
+  display: inline-block;
 }
 
-#header .hleft{
-	float:left;
-	max-width: 80%;
+header h1:hover{
+  background-color: rgba(0,0,0,.1);
 }
 
-
-#header h1{
-	margin: 6px 0;
-	padding: 2px;
-	font-size: 24px;
-	line-height: 30px;
-	text-overflow:ellipsis;
-	overflow: hidden;
-	white-space: nowrap;
-	max-width: 70%;
-	display: inline-block;
+header h1.untitled{
+  font-style: italic;
+  opacity: 0.5;
 }
 
-#header h1:hover{
-	background-color: rgba(0,0,0,.1);
+header .view-only-label{
+  font-weight: normal;
+  vertical-align: top;
+  display: inline-block;
+  font-size: 18px;
+  line-height: 20px;
+  color: rgb(88, 88, 88);
+  margin-left: 20px;
+  margin-top: 15px;
 }
-
-#header h1.untitled{
-	font-style: italic;
-	opacity: 0.5;
-}
-
-#header .hleft .btn-link{	
-	margin: 7px 0 0 0;
-	vertical-align: top;
-}
-
-#header .hleft .btn-link:hover{
-	text-decoration: none;
-}
-
-#header .hright{
-	padding: 10px 0;
-	margin-right: 120px;
-	text-align: right;
-}
-#header .hright.chat-visible{
-	margin-right: 270px;
-}
-
-
-
-#header .view-only-label{
-	font-weight: normal;
-	vertical-align: top;
-	display: inline-block;
-	font-size: 18px;
-	line-height: 20px;
-	color: rgb(88, 88, 88);
-	margin-left: 20px;
-	margin-top: 15px;
-}
-#profile{
-	position: absolute;
-	top:4px;
-	right:26px;
-}
-
 
 #legends{
-	background-color: #f5f5f5;
-	border-top: 1px solid #e5e5e5;
-	border-bottom: 1px solid #e5e5e5;
-	min-height: 35px;
-	padding: 0 44px 0 44px;	
+  background-color: #f5f5f5;
+  border-top: 1px solid #e5e5e5;
+  border-bottom: 1px solid #e5e5e5;
+  min-height: 35px;
+  padding: 0 44px 0 44px;
 }
 
 #legends .legend{
-	margin-right: 10px;
-	float: left;
-	cursor: pointer;
+  margin-right: 10px;
+  float: left;
+  cursor: pointer;
 }
 
 #legends.no-edit .legend{
-	cursor: default;
+  cursor: default;
 }
 
-#legends .legend span{
-	padding-left: 5px;
-	padding-right: 5px;
-	display: inline-block;
-	height: 35px;
-	line-height: 35px;
+#legends .legend md-icon{
+  height: 35px;
+}
+
+#legends .legend span.title{
+  padding-left: 5px;
+  padding-right: 5px;
+  display: inline-block;
+  height: 35px;
+  line-height: 35px;
 }
 
 #legends .legend .selector{
-	width: 35px;
-	height: 35px;
-	float: left;
-	vertical-align: middle;
-	line-height: 35px;
-	text-align: center;
-	
+  width: 35px;
+  height: 35px;
+  float: left;
+  vertical-align: middle;
+  line-height: 35px;
+  text-align: center;
 }
 #legends .legend .selector{
-	color: #e3e3e3
+  color: #e3e3e3
 }
 
 #legends .legend .selector:hover{
-	color: none;
+  color: none;
 }
-
 
 #legends .legend .selector:hover{
-	background-color: #e3e3e3;
+  background-color: #e3e3e3;
 }
-
 
 #legends .legend.new-legend:hover, #legends .legend .marker:hover, #legends .legend span:hover{
-	background-color: #e3e3e3;
+  background-color: #e3e3e3;
 }
 
 #legends .legend.selected{
-	
+
 }
 
 #legends .legend .marker {
   height: 35px;
-  width: 36px;
+  width: 46px;
   float:left;
   padding-right: 5px;
   padding-left: 5px;
 }
 
 #legends .legend .marker path{
-	stroke-width: 3px;
+  stroke-width: 3px;
 }
 
 
 #legends .legend.new-legend{
-	font-style: italic;
-	margin-left: 35px;
+  font-style: italic;
+  margin-left: 35px;
 }
 
 #legends.chat-visible{
-	margin-right: 250px;
+  margin-right: 250px;
 }
 
+.table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.table th {
+  text-align: left;
+  padding: 4px 0;
+}
+.table td {
+  padding: 8px 0;
+}
+
+.table-hover tbody tr:hover{
+  background-color: #5E6FC7;
+}
 
 #dialog-recent table td:nth-child(1),
 #dialog-recent table th:nth-child(1){
-	text-overflow: ellipsis;
-	white-space: nowrap;
-	overflow:hidden;
-	max-width: 200px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  overflow:hidden;
+  max-width: 200px;
 }
 
 #dialog-recent table td:nth-child(2),
 #dialog-recent table th:nth-child(2){
-	width:120px;
+  width:120px;
 }
 
 #dialog-recent table td:nth-child(3),
 #dialog-recent table th:nth-child(3){
-	width:50px;
-	text-align:center;
+  width:50px;
+  text-align:center;
+}
+
+#dialog-recent table td{
+  border-top: 1px solid #ddd;
 }
 
 
@@ -590,96 +446,95 @@ svg g.addfactor:hover text{
 
 
 #chat-toggle{
-	width: 244px;
-	cursor: pointer;
-	position: absolute;
-	bottom: 0;
-	right: 0;
-	padding: 2px 2px 2px 4px;
+  width: 244px;
+  cursor: pointer;
+  position: absolute;
+  bottom: 0;
+  right: 0;
+  padding: 2px 2px 2px 4px;
 }
 
 #chat-toggle i:before{
-	width: 8px;
+  width: 8px;
 }
 
 #chat-toggle.got-new-msg{
-	-webkit-animation: highlight 2s;
-    -webkit-animation-direction:alternate;
-    -webkit-animation-iteration-count: infinite;
-    -webkit-animation-timing-function:  cubic-bezier(0.250, 0.460, 0.450, 0.940);
-    -moz-animation: highlight 2s;
-    -moz-animation-direction:alternate;
-    -moz-animation-iteration-count: infinite;
-    -moz-animation-timing-function:  cubic-bezier(0.250, 0.460, 0.450, 0.940);
-    animation: highlight 2s;
-    animation-direction:alternate;
-    animation-iteration-count: infinite;
-    animation-timing-function:  cubic-bezier(0.250, 0.460, 0.450, 0.940);
+  -webkit-animation: highlight 2s;
+  -webkit-animation-direction:alternate;
+  -webkit-animation-iteration-count: infinite;
+  -webkit-animation-timing-function:  cubic-bezier(0.250, 0.460, 0.450, 0.940);
+  -moz-animation: highlight 2s;
+  -moz-animation-direction:alternate;
+  -moz-animation-iteration-count: infinite;
+  -moz-animation-timing-function:  cubic-bezier(0.250, 0.460, 0.450, 0.940);
+  animation: highlight 2s;
+  animation-direction:alternate;
+  animation-iteration-count: infinite;
+  animation-timing-function:  cubic-bezier(0.250, 0.460, 0.450, 0.940);
 }
 
 #chat-toggle.ui-show{
-	border-left: 1px solid #e5e5e5;
-	border-top: 1px solid #e5e5e5;
-	background-color: #f5f5f5;
+  border-left: 1px solid #e5e5e5;
+  border-top: 1px solid #e5e5e5;
+  background-color: #f5f5f5;
 }
 
 #chat-sidebar{
-	position: fixed;
-	right:0;
-	bottom:0;
-	width: 250px;
-	border-left: 1px solid #e5e5e5;
-	border-top: 1px solid #e5e5e5;
+  position: fixed;
+  right:0;
+  bottom:0;
+  width: 250px;
+  border-left: 1px solid #e5e5e5;
+  border-top: 1px solid #e5e5e5;
 }
 
 #chat-header .user{
-	border-bottom: 1px solid #e5e5e5;
-	background-color: #f5f5f5;
-	padding: 2px 2px 2px 4px; 
+  border-bottom: 1px solid #e5e5e5;
+  background-color: #f5f5f5;
+  padding: 2px 2px 2px 4px; 
 }
 
 #chat-header .user.can-edit{
-	font-style: italic;	
+  font-style: italic;
 }
 
 #chat-content {
-	background-color: #fff;
-	overflow-x:hidden;
-	overflow-y:auto;
+  background-color: #fff;
+  overflow-x:hidden;
+  overflow-y:auto;
 }
 #chat-content .messages{
-	padding: 10px 10px 0 10px;
+  padding: 10px 10px 0 10px;
 }
 
 #chat-content .message{
-	word-wrap:break-word;
+  word-wrap:break-word;
 }
 
 #chat-content .message.status span{
-	
+
 }
 
 #chat-content .message.can-edit span{
-	font-style: italic;
+  font-style: italic;
 }
 
 #chat-content .message.msg span{
-	font-weight: bold;
+  font-weight: bold;
 }
 
 #chat-content .message.msg span i{
-	color: rgba(0,0,0,0.6);
+  color: rgba(0,0,0,0.6);
 }
 
 #chat-content .message.msg span:after{
-	content: ':';
+  content: ':';
 }
 
 #chat-footer{
-	background-color: #f5f5f5;
-	padding: 17px 13px 0 13px;
-	
+  background-color: #f5f5f5;
+  padding: 17px 13px 0 13px;
 }
 #chat-footer textarea{
-	min-height: 80px;
+  min-height: 80px;
 }

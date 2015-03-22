@@ -7,7 +7,7 @@
  * # myChart
  */
 angular.module('strategycanvasFrontendApp')
-  .directive('myChart', function ($window) {
+  .directive('myChart', function ($window, chart) {
     return {
       restrict: 'A',
         scope: false,
@@ -21,7 +21,6 @@ angular.module('strategycanvasFrontendApp')
             lastClickTimeStamp = 0;
             function drawChart() {
               //console.log('drawChart');
-              var chart = scope.chart;
               //root svg
               var svg = elm.find('svg');
               var supportForeignObject = typeof SVGForeignObjectElement !== 'undefined';
@@ -37,11 +36,11 @@ angular.module('strategycanvasFrontendApp')
               //62 = 10 20 1 svg 1 20 10
               //container_height - 42 = svg
               //margins top, right, bottom left
-              var m = [ 2, chart.editCode ? 100 : 2, 100, 42 ],
-                  w = Math.max(100*factorNames.length+1, 1000) - m[1] - m[3],
-                  h = Math.max(430, Math.min(600, $('#mychart').height()-85)) - m[0] - m[2];
+              var m = [10, 100 + 41, 100, 41],//[ 2, chart.editCode ? 140 : 31, 31, 31 ],
+                  w = Math.max(100 * factorNames.length + 1, 1000) - m[1] - m[3],
+                  h = Math.min(660, Math.max(400, $(elm).outerHeight()- $(elm).offset().top)) - m[0] - m[2] +21;
               if(svg.length === 0){
-                h = 600 - m[0] - m[2]; 
+                h = 430 - m[0] - m[2] +21; 
               }
               
 
@@ -54,7 +53,7 @@ angular.module('strategycanvasFrontendApp')
               var currentSeriesOrder = chart.series.map(function(serie){ return serie.business;}).join('');
               var doTransition = oldFactors.length > 0 &&  seriesOrder === currentSeriesOrder && (oldFactors.length !== factorNames.length || oldFactors.join('') ===  factorNames.join(''));
               if(scope.remoteUpdate){
-                scope.remoteUpdate = false;	
+                scope.remoteUpdate = false;
                 doTransition = true;
               }
               
@@ -106,7 +105,7 @@ angular.module('strategycanvasFrontendApp')
               }
               d3.select(elm[0]).select('svg')
               .attr('width', w + m[1] + m[3])
-              .attr('height', h + m[0] + m[2]);
+              .attr('height', h + m[0] + m[2] + 51);
 
               if(chart.editCode){
                 var addFactorGroup = svg.select('g.addfactor');
@@ -125,9 +124,9 @@ angular.module('strategycanvasFrontendApp')
                   .attr('y', 0);
                   
                   addFactorGroup.append('svg:text')
-                  .attr('class', 'icon-plus')
-                  .attr('style', 'font-size:90px; fill: #adc8e3')
-                  .text('\uf067');
+                  .attr('class', 'mdi mdi-plus')
+                  .attr('style', 'font-size:140px; fill: #adc8e3')
+                  .text('\uf3c4');
                 }
                 
                 addFactorGroup.select('rect')
@@ -136,9 +135,9 @@ angular.module('strategycanvasFrontendApp')
                 .style('fill', updateBandingBackgroundAdd());
                 
                 addFactorGroup.select('text')
-                .attr('transform','translate(-35, 38)')
-                .attr('x', 50)
-                .attr('y', h/2);
+                .attr('transform','translate(0, 0)')
+                .attr('x', -20)
+                .attr('y', h/2 +50);
                 
                 addFactorGroup
                 .attr('transform', 'translate(' + (w+2) + ')');
@@ -172,10 +171,10 @@ angular.module('strategycanvasFrontendApp')
                   .text('Add a factor');
                   
                   svg.append('svg:text')
-                  .attr('class', 'icon-double-angle-right addfactorhelparrow')
+                  .attr('class', 'mdi mdi-arrow-right-bold addfactorhelparrow')
                   .attr('x', 680)
                   .attr('style', 'font-size:80px;fill:#fbfbfb')
-                  .text('\uf061');
+                  .text('\uf140');
                 }
               }
               

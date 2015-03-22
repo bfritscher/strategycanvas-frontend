@@ -8,14 +8,16 @@
  *
  * Main module of the application.
  */
+
 angular
   .module('strategycanvasFrontendApp', [
     'ngAnimate',
     'ngCookies',
     'ngRoute',
     'ngSanitize',
-    'ngTouch'
-  ])  
+    'ngTouch',
+    'ngMaterial'
+  ])
   .config(function ($routeProvider) {
     $routeProvider
       .when('/:viewCode', {
@@ -30,19 +32,6 @@ angular
         redirectTo: '/'
       });
   })
-/*
-  .value('ui.config', {
-    // The ui-jq directive namespace
-     jq: {
-        // The Tooltip namespace
-        tooltip: {
-           // Tooltip options. This object will be used as the defaults
-           placement: 'bottom',
-           
-        }
-     }
-  })
-*/
   .run(['$window', '$location', '$rootScope', 'localDS', function($window, $location, $rootScope, localDS){
       $rootScope.$on('$routeChangeSuccess', function(){
         var path = $location.path();
@@ -61,3 +50,14 @@ angular
         }
       });
   }]);
+//fix svg bind bug https://github.com/angular/angular.js/issues/1050
+angular.forEach(['d'], function(name) {
+  var ngName = 'ng' + name[0].toUpperCase() + name.slice(1);
+  angular.module('strategycanvasFrontendApp').directive(ngName, function() {
+    return function(scope, element, attrs) {
+      attrs.$observe(ngName, function(value) {
+        attrs.$set(name, value); 
+      });
+    };
+  });
+});  

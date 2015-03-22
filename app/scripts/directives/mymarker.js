@@ -19,6 +19,7 @@ angular.module('strategycanvasFrontendApp')
       link: function($scope, elm, attrs) {
         var beforeChange = '';
         //TODO: editable field in Service?
+        /*
         if($scope.$parent.chart.editCode){
           elm.clickover({html:true,
             placement:'bottom',
@@ -39,6 +40,7 @@ angular.module('strategycanvasFrontendApp')
             },
             content:$('#markerEditorhtml').html()});
         }
+        */
       }
     };
   });

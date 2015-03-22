@@ -16,17 +16,20 @@
     <!-- build:css(.) styles/vendor.css -->
     <link rel="stylesheet" href="bower_components/zocial/css/zocial.css">
     <!-- bower:css -->
+    <link rel="stylesheet" href="bower_components/angular-material/angular-material.css" />
+    <link rel="stylesheet" href="bower_components/mdi/css/materialdesignicons.css" />
+    <link rel="stylesheet" href="bower_components/mdi/css/materialdesignicons.min.css" />
     <!-- endbower -->
     <!-- endbuild -->
     <!-- build:css(.tmp) styles/main.css -->
     <link rel="stylesheet" href="styles/main.css">
     <!-- endbuild -->
   </head>
-  <body ng-app="strategycanvasFrontendApp">
+  <body ng-app="strategycanvasFrontendApp" layout="row">
     <!--[if lt IE 7]>
       <p class="browsehappy">You are using an <strong>outdated</strong> browser. Please <a href="http://browsehappy.com/">upgrade your browser</a> to improve your experience.</p>
     <![endif]-->
-    <div ng-view="">
+    <div ng-view="" flex layout="column">
 <div style="color:#ebebeb;">
 Welcome to StrategyCanvas.org!
 
@@ -57,6 +60,25 @@ HINT: Live collaborative editing is supported; just share the link with a collea
        ga('create', 'UA-38238186-1');
        ga('send', 'pageview');
     </script>
+    <script>
+    var switchTo5x=true;
+    (function() {
+        var sharethis = document.createElement('script');
+        sharethis.type = 'text/javascript';
+        sharethis.async = true;
+        sharethis.src = 'http://w.sharethis.com/button/buttons.js';
+        sharethis.onload = function(){
+          stLight.options({publisher: "20ff68e5-3e3e-44ee-89f1-e1d3159c7ce0",
+            tracking:'google',
+            doneScreen: false,
+            onhover: false,
+            doNotHash: true, doNotCopy: true, hashAddressBar: false});
+        }
+        var s = document.getElementsByTagName('body')[0];
+        s.appendChild(sharethis);
+    })();
+    </script>
+    <script src="//platform.linkedin.com/in.js" type="text/javascript"></script>
 
     <!-- build:js(.) scripts/vendor.js -->
     <!-- bower:js -->
@@ -72,13 +94,13 @@ HINT: Live collaborative editing is supported; just share the link with a collea
     <script src="bower_components/d3/d3.js"></script>
     <script src="bower_components/jquery.dragscrollable/dragscrollable.js"></script>
     <script src="bower_components/jquery-mousewheel/jquery.mousewheel.js"></script>
+    <script src="bower_components/angular-aria/angular-aria.js"></script>
+    <script src="bower_components/angular-material/angular-material.js"></script>
     <!-- endbower -->
     <!-- endbuild -->
 
         <!-- build:js({.tmp,app}) scripts/scripts.js -->
         <script src="scripts/app.js"></script>
-        <script src="scripts/controllers/main.js"></script>
-        <script src="scripts/controllers/about.js"></script>
         <script src="scripts/services/localds.js"></script>
         <script src="scripts/services/dashs.js"></script>
         <script src="scripts/controllers/edit.js"></script>
@@ -88,7 +110,8 @@ HINT: Live collaborative editing is supported; just share the link with a collea
         <script src="scripts/directives/mymarker.js"></script>
         <script src="scripts/directives/mycopyinput.js"></script>
         <script src="scripts/directives/mydraggable.js"></script>
-        <script src="scripts/directives/myoptions.js"></script>
+        <script src="scripts/services/chart.js"></script>
+        <script src="scripts/directives/linkedin.js"></script>
         <!-- endbuild -->
 </body>
 </html>
