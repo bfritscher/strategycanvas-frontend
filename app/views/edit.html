@@ -1,42 +1,3 @@
-<!-- Dialog/Popup Templates -->
-<script type="text/ng-template" id="marker.html">
-  <div class="marker"><svg width="100%" height="100%">
-    <path d="m0,16h36"
-    class="dash"
-    stroke-dasharray="{{serie.dash}}" 
-    stroke="{{serie.color}}" fill="{{serie.color}}"/>
-    <path
-    transform="translate(18,15.5) scale(1.4)"
-    ng-d="{{serie.symbol | symbolPath}}" 
-    stroke="{{serie.color}}" fill="{{serie.color}}"/>
-  </svg></div>
-</script>
-<script type="text/ng-template" id="markerEditorhtml">
-  <div class="markerEditor clearfix" ng-show="markerEditor.serie != undefined" ng-style="{top:markerEditor.top, left:markerEditor.left}">
-    <div class="color" ng-repeat="color in markerEditor.colors" 
-      ng-class="{'selected': markerEditor.serie.color==color}" ng-style="{'background-color': color}"
-       ng-click="serie.color=color"></div>
-    <div class="color" ng-repeat="symbol in markerEditor.symbols"
-    ng-class="{'selected': markerEditor.serie.symbol==symbol}"
-    ng-click="serie.symbol=symbol">
-      <svg width="100%" height="100%" viewBox="-8 -8 16 16">
-        <path ng-d="{{symbol | symbolPath}}" 
-        stroke="{{markerEditor.serie.color}}" fill="{{markerEditor.serie.color}}"/>
-      </svg>
-    </div>
-    <div class="color" ng-repeat="dash in markerEditor.dashs"
-    ng-class="{'selected': markerEditor.serie.dash==dash}"
-    ng-click="serie.dash=dash">
-      <svg width="100%" height="100%" viewBox="0 0 32 32">
-        <path d="m0,16h64"
-        class="dash"
-        stroke-dasharray="{{dash}}" 
-        stroke="{{markerEditor.serie.color}}" fill="{{markerEditor.serie.color}}"/>
-      </svg>
-    </div>
-  </div>
-</script>
-
 <!-- header -->
 <md-toolbar>
   <header class="md-toolbar-tools">
@@ -84,33 +45,26 @@
 <!-- menu bar -->
 <div id="legends" ng-class="{'chat-visible': chat.isVisible, 'no-edit': !chart.editCode}">
   <div ng-repeat="serie in chart.series | orderBy:'business'" class="legend" ng-class="{'selected': chart.series.indexOf(serie) == chart.series.length-1}">
-    <div class="selector" ng-click="manualMoveSerieToTop(serie)" ng-mouseenter="mycolor=serie.color"
+    <div class="selector" ng-click="chart.manualMoveSerieToTop(serie)" ng-mouseenter="mycolor=serie.color"
      ng-init="mycolor='#e3e3e3'"
      ng-mouseleave="mycolor='#e3e3e3'" ng-style="{'color': chart.series.indexOf(serie) == chart.series.length-1 && serie.color || mycolor}">
      <md-icon md-font-icon="mdi mdi-pencil"></md-icon>
      </div>
-    <div my-marker serie="serie" marker-editor="markerEditor"></div><span class="title" ng-click="!chart.editCode || showRemoveDialog('serie', serie)">{{serie.business}}</span>
+    <div ng-click="showMarkerEditor($event, serie)" my-marker serie="serie"></div><span class="title" ng-click="!chart.editCode || showRemoveDialog($event, 'serie', serie)">{{serie.business}}</span>
   </div>
-  <div ng-show="chart.editCode" class="legend new-legend" ng-click="!chart.editCode || showValueCurveDialog()">
+  <div ng-show="chart.editCode" class="legend new-legend"
+       ng-click="!chart.editCode || showAddDialog($event, 'serie')">
     <md-tooltip>Click to add a new value curve</md-tooltip>
-    <div class="marker"><svg width="100%" height="100%" >
-      <path d="m0,16h36"
-      class="dash"
-      stroke-dasharray="{{chart.temp.serie.dash}}" 
-      stroke="{{chart.temp.serie.color}}" fill="{{chart.temp.serie.color}}"/>
-      <path
-      transform="translate(18,15.5) scale(1.4)"
-      ng-d="{{chart.temp.serie.symbol | symbolPath}}" 
-      stroke="{{chart.temp.serie.color}}" fill="{{chart.temp.serie.color}}"/>
-    </svg></div><span class="title">New</span>
+    <div my-marker serie="chart.temp.serie"></div>
+    <span class="title">New</span>
   </div>
 </div>
 <div class="main" layout="row" flex>
-  <!-- note pan -->
+  <!-- note pan TODO hook event-->
   <div id="description" class="animate" layout="row" ng-style="{'width': notes.width}" my-draggable="notes.width">
     <pre flex ng-if="!chart.editCode" class="description-text" ng-bind="chart.description"></pre>
     <textarea flex ng-if="chart.editCode" class="description-text"
-        ui-event="{keyup: 'notifyChartDescription()'}"
+        ng-keyup="chart.notifyChartDescription()"
        placeholder="Add your notes" ng-model="chart.description"></textarea>
     <div id="description-handler" class="no-select handler"><div>Notes</div></div>
   </div>
@@ -124,14 +78,18 @@
     <h1 class="md-toolbar-tools">Options</h1>
   </md-toolbar>
   <md-content class="md-padding">
+    <h3>Login</h3>
+    <!-- TODO fix login -->
     <a ui-if="!loggedInUser" ng-click="dialog.login=true">sign in</a>
     <a ui-if="loggedInUser" ng-click="logout()">{{loggedInUser.username}} logout</a>
-        <button ng-click="loginWith('facebook')" class="zocial facebook">Sign in with Facebook</button>
+    <button ng-click="loginWith('facebook')" class="zocial facebook">Sign in with Facebook</button>
     <button ng-click="loginWith('google2')" class="zocial googleplus">Sign in with Google</button>
     <button ng-click="loginWith('linkedin')" class="zocial linkedin">Sign in with LinkedIn</button>
-  <p><label>Marker size</label><input type="range" from="8" to="18" ng-model="profile.markerSize" /> {{profile.markerSize}}</p>
-  <p><label>Export data</label><button class="btn btn btn-success" ng-click="downloadCSV()">Download CSV</button>
-  <button class="btn btn btn-success" ng-click="downloadJSON()">Download JSON</button></p>    
+  <h3>Marker size</h3>
+  <md-slider min="8" max="42" step="1" md-discrete ng-model="profile.markerSize" aria-label="marker size"></md-slider>
+  <h3>Export data</h3>
+  <p><md-button class="md-raised" ng-click="downloadCSV()">Download CSV</md-button></p>
+  <p><md-button class="md-raised" ng-click="downloadJSON()">Download JSON</md-button></p>
   </md-content>
 </md-sidenav>
 
@@ -152,7 +110,55 @@
 </div>
 -->
 
+<!-- Templates -->
+<script type="text/ng-template" id="marker.html">
+  <div class="marker"><svg width="100%" height="100%">
+    <path d="m0,16h36"
+    class="dash"
+    stroke-dasharray="{{serie.dash}}" 
+    stroke="{{serie.color}}" fill="{{serie.color}}"/>
+    <path
+    transform="translate(18,15.5) scale(1.4)"
+    ng-d="{{serie.symbol | symbolPath}}" 
+    stroke="{{serie.color}}" fill="{{serie.color}}"/>
+  </svg></div>
+</script>
+
 <!-- Modal Dialogs-->
+<script type="text/ng-template" id="markerEditor.html">
+<md-dialog aria-label="change serie look" style="position:absolute;" ng-style="{top: markerEditor.top, left: markerEditor.left}">
+  <md-content class="markerEditor clearfix" ng-show="markerEditor.serie != undefined" layout="column">
+    <div layout="row" layout-wrap>
+      <div aria-label="color" class="color" ng-repeat="color in markerEditor.colors" 
+        ng-class="{'selected': markerEditor.serie.color==color}" ng-style="{'background-color': color}"
+        ng-click="markerEditor.serie.color=color"></div>
+    </div>
+    <div layout="row" layout-wrap>
+      <div aria-label="symbol" class="color" ng-repeat="symbol in markerEditor.symbols"
+        ng-class="{'selected': markerEditor.serie.symbol==symbol}"
+        ng-click="markerEditor.serie.symbol=symbol">
+        <svg width="100%" height="100%" viewBox="-8 -8 16 16">
+          <path ng-d="{{symbol | symbolPath}}" 
+          stroke="{{markerEditor.serie.color}}" fill="{{markerEditor.serie.color}}"/>
+        </svg>
+      </div>
+    </div>
+    <div layout="row" layout-wrap>
+      <div aria-label="dash" class="color" ng-repeat="dash in markerEditor.dashs"
+      ng-class="{'selected': markerEditor.serie.dash==dash}"
+      ng-click="markerEditor.serie.dash=dash">
+        <svg width="100%" height="100%" viewBox="0 0 32 32">
+          <path d="m0,16h64"
+          class="dash"
+          stroke-dasharray="{{dash}}" 
+          stroke="{{markerEditor.serie.color}}" fill="{{markerEditor.serie.color}}"/>
+        </svg>
+      </div>
+    </div>
+  </md-content>
+</md-dialog>
+</script>
+
 <script type="text/ng-template" id="editTitle.html">
 <md-dialog>
   <md-content>
@@ -209,70 +215,60 @@
 </md-dialog>
 </script>
 
-<!--
-<div ui-modal ng-model="dialog.valueCurve" data-backdrop="static" style="width:420px;margin-left:-210px;top:25%" class="modal hide" tabindex="-1" role="dialog">
-  <div class="modal-header">
-    <button type="button" class="close" data-dismiss="modal" aria-hidden="true"><i class="icon-remove"></i></button>
-    <div>Add a new value curve</div>
+<script type="text/ng-template" id="addDialog.html">
+<md-dialog>
+  <md-content>
+    <h2 ng-bind="title"></h2>
+    <form name="form">
+    <md-input-container ng-show="!advancedEntry">
+      <label>Enter a new name</label>
+      <input required type="text" name="name" ng-model="name" ng-show="!advancedEntry" ui-validate="{inuse:'validate($value)'}" />
+      <div ng-messages="form.name.$error">
+        <div ng-message="required">This is required.</div>
+        <div ng-message="inuse">Name already in use on this canvas!</div>
+      </div>
+    </md-input-container>
+    <md-input-container ng-show="advancedEntry">
+      <label ng-bind="infoMsg">Enter a new name</label>
+      <textarea required ng-model="name" ng-show="advancedEntry"></textarea>
+    </md-input-container>
+    </form>
+  </md-content>
+  <div class="md-actions">
+    <md-button aria-label="switch entry mode" ng-click="advancedEntry=!advancedEntry" ng-bind="advancedEntry && 'Switch to normal mode' || 'Switch to advanced mode'"></md-button>
+    <span flex></span>
+    <md-button ng-click="cancel()">Cancel</md-button>
+    <md-button class="md-primary" ng-click="add()" ng-disabled="form.$invalid">Add</md-button>
   </div>
-  <div class="modal-body">
-  <form name="form1">
-    <label>Enter a name</label>
-    <input ng-show="!advancedEntry" name="business" style="width:345px" type="text" required ui-validate="{inuse:businessNotInUse}" ng-model="temp.serie.business" autofocus ui-keydown="{'enter':'form1.$invalid || addSerie()'}" />
-    <p ng-show="form1.business.$error.inuse" class="invalid">Name already in use on this canvas!</p>
-    <textarea style="width:345px;height:130px" ng-model="temp.serie.business" ng-show="advancedEntry"></textarea>
-    <p ng-show="advancedEntry" ><span class="label label-info">Info</span> enter one value curve name per line</p>
-    <a href ng-click="advancedEntry=!advancedEntry" ng-bind="advancedEntry && 'Switch to normal mode' || 'Switch to advanced mode'"></a>
-   </form>
-  </div>
-  <div class="modal-footer">
-    <button class="btn btn-primary" ng-click="addSerie()"  ng-disabled="form1.$invalid">Add</button>
-    <button class="btn" data-dismiss="modal" aria-hidden="true">Cancel</button>
-  </div>
-</div>
+</md-dialog>
+</script>
 
-<div ui-modal ng-model="dialog.add" data-backdrop="static" style="width:420px;margin-left:-210px;top:25%" class="modal hide" tabindex="-1" role="dialog">
-  <div class="modal-header">
-    <button type="button" class="close" data-dismiss="modal" aria-hidden="true"><i class="icon-remove"></i></button>
-    <div>Add a new factor</div>
+<script type="text/ng-template" id="removeDialog.html">
+<md-dialog>
+  <md-content>
+    <h2>Rename / remove <i ng-bind="title"></i></h2>
+    <form name="form">
+      <md-input-container>
+        <label>Enter a new name</label>
+        <input required type="text" name="name" ng-model="name"  ui-validate="{inuse:'validate($value)'}" />
+        <div ng-messages="form.name.$error">
+          <div ng-message="required">This is required.</div>
+          <div ng-message="inuse">Name already in use on this canvas!</div>
+        </div>
+      </md-input-container>
+      <p style="font-size: 12px;" ><span class="md-button md-default-theme md-primary">info</span> Removing does not delete the associated data.<br/>
+      <span>You can add <i ng-bind="title"></i> again to the canvas and see it again.</span></p>
+      <p  style="font-size: 12px;" class="text-warning"><span class="md-button md-default-theme md-warn">warn</span> Updating will overwrite any existing values.</p>
+    </form>
+  </md-content>
+  <div class="md-actions">
+    <md-button class="md-warn" ng-click="update()" ng-disabled="form.$invalid">Update</md-button>
+    <span flex></span>
+    <md-button ng-click="cancel()">Cancel</md-button>
+    <md-button class="md-primary" ng-click="remove()">Remove</md-button>
   </div>
-  <div class="modal-body">
-  <form name="form4">
-    <label>Enter a name</label>
-    <input ng-show="!advancedEntry" name="factor" style="width:345px" type="text" required ui-validate="{inuse:factorNotInUse}" ng-model="temp.factor.name" autofocus ui-keydown="{'enter':'form.$invalid || addFactor()'}" />
-    <p ng-show="form4.factor.$error.inuse" class="invalid">Name already in use on this canvas!</p>
-    <textarea style="width:345px;height:130px" ng-model="temp.factor.name" ng-show="advancedEntry"></textarea>
-      <p ng-show="advancedEntry"><span class="label label-info">Info</span> enter one factor name per line</p>
-    <a href ng-click="advancedEntry=!advancedEntry" ng-bind="advancedEntry && 'Switch to normal mode' || 'Switch to advanced mode'"></a>
-   </form>
-  </div>
-  <div class="modal-footer">
-    <button class="btn btn-primary" ng-click="addFactor()"  ng-disabled="form4.$invalid">Add</button>
-    <button class="btn" data-dismiss="modal" aria-hidden="true">Cancel</button>
-  </div>
-</div>
-
-<div ui-modal ng-model="dialog.remove" data-backdrop="static" style="width:420px;margin-left:-210px;top:25%" class="modal hide" tabindex="-1" role="dialog">
-  <div class="modal-header">
-    <button type="button" class="close" data-dismiss="modal" aria-hidden="true"><i class="icon-remove"></i></button>
-    <div>Rename / remove <i ng-bind="temp.remove.name"></i></div>
-  </div>
-  <div class="modal-body">
-  <form name="form3">
-    <input name="newname" style="width:345px" type="text" ng-model="temp.remove.newname" autofocus  ui-keydown="{'enter':'temp.remove.update()'}" required="required"/>
-    <p style="font-size: 12px;" ><span class="label label-info">info</span> Removing does not delete the associated data.<br/>
-    <span>You can add <i ng-bind="temp.remove.name"></i>
-    again to the canvas and see it again.</span></p>
-    <p  style="font-size: 12px;" class="text-warning"><span class="label label-warning">warn</span> Renaming will overwrite any existing values.</p>
-</form>    
-  </div>
-  <div class="modal-footer">
-    <button class="btn btn-warning" ng-click="temp.remove.update()">Update</button>
-    <button class="btn btn-primary" ng-click="temp.remove.remove()">Remove</button>
-    <button class="btn" ng-click="dialog.remove=false" aria-hidden="true">Cancel</button>
-  </div>
-</div>
--->
+</md-dialog>
+</script>
 
 <script type="text/ng-template" id="shareDialog.html">
 <md-dialog>
@@ -290,7 +286,7 @@
       <span class='st_googleplus_large' displayText='Google +' st_url="{{baseUri}}#/{{chart.viewCode}}" st_title="StrategyCanvas.org: {{chart.title}}"></span>
       <span class='st_evernote_large' displayText='Evernote' st_url="{{baseUri}}#/{{chart.viewCode}}" st_title="StrategycCanvas.org: {{chart.title}}"></span>
     </div>
-    <div ng-if="!chart.editCode">
+    <div ng-if="chart.editCode">
       <md-divider></md-divider>
       <md-input-container class="md-default-theme md-input-has-value">
         <label>Link for edit mode (live collaboration)</label>

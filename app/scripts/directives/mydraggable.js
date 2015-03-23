@@ -16,12 +16,12 @@ angular.module('strategycanvasFrontendApp')
         var x;
         var y;
         d3.select(elm.find('.handler')[0])
-        .on("click", function() {
+        .on('click', function() {
           if (d3.event.defaultPrevented){
             return; // click suppressed
           }
           $scope.$apply(function(){
-            $scope.notes.width = $scope.notes.width=='0' && $scope.notes.widthOpen || '0';
+            $scope.notes.width = $scope.notes.width === '0' && $scope.notes.widthOpen || '0';
           });
         })
         .call(d3.behavior.drag()
@@ -34,7 +34,7 @@ angular.module('strategycanvasFrontendApp')
           })
           .on('drag', function () {
             
-            if(x != d3.event.x && y != d3.event.y){ //fix chrome drag event when click
+            if(x !== d3.event.x && y !== d3.event.y){ //fix chrome drag event when click
               $scope.$apply(function(){
                 var width = d3.event.x + offset;
                 var widthOpen = width;
@@ -47,7 +47,7 @@ angular.module('strategycanvasFrontendApp')
               });
             }
           })
-          .on("dragend", function () {
+          .on('dragend', function () {
             elm.addClass('animate');
           })
         );

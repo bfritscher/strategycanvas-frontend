@@ -7,7 +7,7 @@
  * # myChart
  */
 angular.module('strategycanvasFrontendApp')
-  .directive('myChart', function ($window, chart) {
+  .directive('myChart', function (chart, log) {
     return {
       restrict: 'A',
         scope: false,
@@ -20,7 +20,6 @@ angular.module('strategycanvasFrontendApp')
             seriesOrder = '',
             lastClickTimeStamp = 0;
             function drawChart() {
-              //console.log('drawChart');
               //root svg
               var svg = elm.find('svg');
               var supportForeignObject = typeof SVGForeignObjectElement !== 'undefined';
@@ -76,7 +75,7 @@ angular.module('strategycanvasFrontendApp')
                 factorNames.forEach(function(factoreName) {
                   if(serie.offerings.hasOwnProperty(factoreName) && serie.offerings[factoreName] !== undefined){
                     //TODO handle animation of drag?
-                    points.push([x(factoreName) + x.rangeBand()/2 , y[factoreName](serie.offerings[factoreName])]);	
+                    points.push([x(factoreName) + x.rangeBand()/2 , y[factoreName](serie.offerings[factoreName])]);
                   }
                 });
                 return line(points);
@@ -113,9 +112,7 @@ angular.module('strategycanvasFrontendApp')
                   addFactorGroup = svg.append('svg:g')
                   .attr('class', 'addfactor no-select')
                   .on('click', function (){
-                    scope.$apply(function(){
-                      scope.dialog.add = true;
-                    });
+                    scope.showAddDialog(d3.event, 'factor');
                   });
                   
                   addFactorGroup.append('svg:rect')
@@ -289,7 +286,8 @@ angular.module('strategycanvasFrontendApp')
               // Add a group element for each trait.
               var factorContainer = factorGroup.selectAll('.factor').data(factorNames, function(d){return d;});
               var factorContainerEnter = factorContainer.enter()
-                  .append('svg:g').attr('class', 'factor no-select')
+                  .append('svg:g')
+                  .attr('class', 'factor no-select')
                   //appear from the right
                   .attr(
                       'transform', function() {
@@ -320,32 +318,16 @@ angular.module('strategycanvasFrontendApp')
                   if ($(this).data('already')) {
                         $(this).data('already', false);
                         return false;
-                    } else if (event.type === 'touchstart') {
+                    } else if (d3.event.type === 'touchstart') {
                         $(this).data('already', true);
                     }
                   
                   
                   var pos = d3.event.changedTouches ? d3.touches(this,  d3.event.changedTouches)[0] : d3.mouse(this);
-                  
                   var v = Math.max(0, Math.min(1, y[factorName].invert(pos[1])));
-                  for(var i=chart.series.length-1; i >= 0; i--){
-                    if(chart.series[i].offerings[factorName] === undefined){
-                      scope.$apply(function(){
-                        scope.notifyOfferingChange(chart.series[i], factorName, v);
-                        $window.ga('send', 'event', 'offering', 'add', chart.editCode);
-                      });
-                      return;
-                    }
-                  }
-                  //create new serie to add point
-                  //TODO: refactor: into controller/service
                   scope.$apply(function(){
-                    var series = scope.addSerie();
-                    $window.ga('send', 'event', 'serie', 'autoadd', chart.editCode);
-                    scope.notifyOfferingChange(series[0], factorName, v);
-                    $window.ga('send', 'event', 'offering', 'add', chart.editCode);
+                    chart.addOffering(factorName, v);
                   });
-                  
                 };
               }
               
@@ -358,11 +340,12 @@ angular.module('strategycanvasFrontendApp')
               .attr('width', 50)
               .attr('height', function(factorName){ return 50+y[factorName](0)-y[factorName](1);})
               .on('mousedown', function(){
-              d3.event.stopPropagation();
-            })
-            .on('touchstart', addOfferingHandler)
-            .on('click', addOfferingHandler);
+                d3.event.stopPropagation();
+              });
               
+              factorContainer
+              .on('touchstart', addOfferingHandler)
+              .on('click', addOfferingHandler);
               
               //hate IE... even 10
               if(!supportForeignObject){
@@ -377,21 +360,19 @@ angular.module('strategycanvasFrontendApp')
                 var pos = $('#mychart .legendbackground').offset();
                 d3.select(elm[0]).selectAll('div.iexlegend')
                 .attr('style', function(factorName){
-                  return 'top:' + (pos.top - 65) + 'px;' +
-                    'left:' + (x(factorName) + pos.left) + 'px;' +
+                  return 'top:' + (pos.top - 85) + 'px;' +
+                    'left:' + (x(factorName) + pos.left-41) + 'px;' +
                     'width:' + x.rangeBand() + 'px;';})
                   .text(String)
                   .on('mousedown', function(){
-                d3.event.stopPropagation();	
+                d3.event.stopPropagation();
               })
               .on('touchstart', function(){
-                d3.event.stopPropagation();	
+                d3.event.stopPropagation();
               })
                 .on('mouseup', function(factorName){
                   if(chart.editCode){
-                    scope.$apply(function(){
-                      scope.showRemoveDialog('factor',factorName);
-                    });
+                    scope.showRemoveDialog(d3.event, 'factor', factorName);
                   }
                 });
               }
@@ -407,16 +388,14 @@ angular.module('strategycanvasFrontendApp')
               .attr('class', 'xlegend')
               .text(String)
               .on('mousedown', function(){
-              d3.event.stopPropagation();	
-            })
-            .on('touchstart', function(){
-              d3.event.stopPropagation();	
-            })
+                d3.event.stopPropagation();
+              })
+              .on('touchstart', function(){
+                d3.event.stopPropagation();
+              })
               .on('mouseup', function(factorName){
                 if(chart.editCode){
-                  scope.$apply(function(){
-                    scope.showRemoveDialog('factor',factorName);
-                  });
+                  scope.showRemoveDialog(d3.event, 'factor',factorName);
                 }
               });
               
@@ -436,94 +415,96 @@ angular.module('strategycanvasFrontendApp')
               .attr('width', domainWidth)
               .attr('height', function(factorName){ return 50+y[factorName](0)-y[factorName](1);});
               
-              factorContainer.exit().transition().duration(500).style('opacity', 0).remove();	
+              factorContainer.exit().transition().duration(500).style('opacity', 0).remove();
               backgroundFactor.exit().transition().duration(500).attr('width', 0).attr('x', function(){
                 return parseFloat(d3.select(this).attr('x')) + x.rangeBand()/2;
               }).remove();
               
               //handle factor dragging right-left
               if(chart.editCode){
-              var isDraging = false;
-              factorContainer
-              .call(d3.behavior.drag().origin(function(factorName) {
-                  return {
-                    x : x(factorName),
-                    y : null
-                  };
-                })
-                .on('dragstart', function (factorName) {
-                  isDraging = false;
-                  var i = factorNames.indexOf(factorName);
-                  //move to top visible
-                  var node = d3.select(this).node();
-                  node.parentNode.appendChild(node);
-                  backgroundGroup.node().appendChild(backgroundFactor[0][i]);
-                })
-                .on('drag', function (factorName) {
-                  if(Math.abs(x(factorName) - d3.event.x) < 30 && !isDraging){
-                    return;
-                  }
-                  isDraging = true;
-                  var i = x.domain().indexOf(factorName);
-                  x.range()[i] = d3.event.x;
-                  factorNames.sort(function(a, b) {
-                    return x(a) - x(b);
-                  });
-                  var dragX = x(factorName);
-                  
-                  foreground.selectAll('.foreground .line').attr('d', path);
-                  x.domain(factorNames).rangeBands([ 0, w ]);
-                  
-                  if(!supportForeignObject){ //ie... 
-                    var pos = $('#mychart .legendbackground').offset();
-                      d3.select(elm[0]).selectAll('div.iexlegend')
-                      .attr('style', function(d){
-                        return 'top:' + (pos.top - 65) + 'px;' + 
-                          'left:' + ((d === factorName ? dragX : x(d)) + pos.left) + 'px;' +
-                          'width:' + x.rangeBand() + 'px;';})
-                        .text(String);
-                  }
-                  
-                  factorContainer.filter(':last-child').attr('transform', 'translate('+ dragX + ')');
-                  factorContainer.filter(':not(:last-child)').transition().duration(200).ease('linear')
-                  .attr('transform',  function(d){ return 'translate(' + x(d) + ')';});
-
-              backgroundFactor.style('fill', updateBandingBackground);
-              backgroundFactor.filter(':last-child').attr('x', dragX);
-              backgroundFactor.filter(':not(:last-child)').transition().duration(200).ease('linear')
-              .attr('x',  function(d){ return x(d);});
-                  
-                })
-                .on('dragend', function () {
-                  isDraging = false;
-                  x.domain(factorNames).rangeBands([ 0, w ]);
-                  
-                  var t = d3.transition().duration(500);
-                  t.selectAll('.factor').attr('transform',function(d) {
-                    return 'translate(' + x(d) + ')';
-                  });
-                  
-                  if(!supportForeignObject){
-                    var pos = $('#mychart .legendbackground').offset();
-                      t.selectAll('div.iexlegend')
-                      .style('left', function(d){
-                        return (x(d) + pos.left) + 'px';
-                      });
-                  }
-                  
-                  
-                  backgroundGroup.selectAll('.backgroundFactor').attr('x',  function(factorName){ return x(factorName);});
-                  t.selectAll('.foreground .line').attr('d', path);
-                  t.transition().each('end', function(){
-                    if(factorNames.join('') !== chart.factors.join('')){
-                      scope.$apply(function(){
-                        scope.notifyFactorsChange(factorNames);
-                        $window.ga('send', 'event', 'factor', 'dragged', chart.editCode);
-                      });
+                var isDraging = false;
+                factorContainer
+                .call(d3.behavior.drag()
+                .origin(function(factorName) {
+                    return {
+                      x : x(factorName),
+                      y : null
+                    };
+                  })
+                  .on('dragstart', function (factorName) {
+                   isDraging = false;
+                   
+                    var i = factorNames.indexOf(factorName);
+                    //move to top visible
+                    var node = d3.select(this).node();
+                    node.parentNode.appendChild(node);
+                    backgroundGroup.node().appendChild(backgroundFactor[0][i]);
+                  })
+                  .on('drag', function (factorName) {
+                    if( !isDraging && Math.abs(x(factorName) - d3.event.x) < 30){
+                      return;
                     }
-                  });
-                })
-              );
+                    isDraging = true;
+                    var i = x.domain().indexOf(factorName);
+                    x.range()[i] = d3.event.x;
+                    factorNames.sort(function(a, b) {
+                      return x(a) - x(b);
+                    });
+                    var dragX = x(factorName);
+                    
+                    foreground.selectAll('.foreground .line').attr('d', path);
+                    x.domain(factorNames).rangeBands([ 0, w ]);
+                    
+                    if(!supportForeignObject){ //ie... 
+                      var pos = $('#mychart .legendbackground').offset();
+                        d3.select(elm[0]).selectAll('div.iexlegend')
+                        .attr('style', function(d){
+                          return 'top:' + (pos.top - 85) + 'px;' + 
+                            'left:' + ((d === factorName ? dragX : x(d)) + pos.left-41) + 'px;' +
+                            'width:' + x.rangeBand() + 'px;';})
+                          .text(String);
+                    }
+                    
+                    factorContainer.filter(':last-child').attr('transform', 'translate('+ dragX + ')');
+                    factorContainer.filter(':not(:last-child)').transition().duration(200).ease('linear')
+                    .attr('transform',  function(d){ return 'translate(' + x(d) + ')';});
+
+                    backgroundFactor.style('fill', updateBandingBackground);
+                    backgroundFactor.filter(':last-child').attr('x', dragX);
+                    backgroundFactor.filter(':not(:last-child)').transition().duration(200).ease('linear')
+                    .attr('x',  function(d){ return x(d);});
+                  })
+                  .on('dragend', function () {
+                    isDraging = false;
+                    
+                    x.domain(factorNames).rangeBands([ 0, w ]);
+                    
+                    var t = d3.transition().duration(500);
+                    t.selectAll('.factor').attr('transform',function(d) {
+                      return 'translate(' + x(d) + ')';
+                    });
+                    
+                    if(!supportForeignObject){
+                      var pos = $('#mychart .legendbackground').offset();
+                        t.selectAll('div.iexlegend')
+                        .style('left', function(d){
+                          return (x(d) + pos.left-41) + 'px';
+                        });
+                    }
+                    
+                    
+                    backgroundGroup.selectAll('.backgroundFactor').attr('x',  function(factorName){ return x(factorName);});
+                    t.selectAll('.foreground .line').attr('d', path);
+                    t.transition().each('end', function(){
+                      if(factorNames.join('') !== chart.factors.join('')){
+                        scope.$apply(function(){
+                          chart.notifyFactorsChange(factorNames);
+                          log.event('factor', 'dragged', chart.editCode);
+                        });
+                      }
+                    });
+                  })
+                );
               }//end edit
     
               maybeTransiton(factorContainer).attr(
@@ -548,7 +529,7 @@ angular.module('strategycanvasFrontendApp')
                   .attr('class', 'dot')
                   .attr('transform', function(d){ return 'matrix(0, 0, 0, 0, '+(x.rangeBand()/2)+', '+y[d.factorName](d.serie.offerings[d.factorName])+')';});
               markerEnter.transition().duration(500).ease('elastic', 1.8, 0.45)
-                  .attr('transform', function(d){ return 'matrix(1, 0, 0, 1, '+(x.rangeBand()/2)+', '+y[d.factorName](d.serie.offerings[d.factorName])+')';});				        		  	
+                  .attr('transform', function(d){ return 'matrix(1, 0, 0, 1, '+(x.rangeBand()/2)+', '+y[d.factorName](d.serie.offerings[d.factorName])+')';});
               
               
               markerEnter.append('svg:path');
@@ -570,10 +551,8 @@ angular.module('strategycanvasFrontendApp')
               marker.select('rect')
               .attr('x', -domainWidth/2)
               .attr('width', domainWidth);
-                                    
-              marker
-                .call(
-                  d3.behavior.drag().origin(function(point) {
+                      
+              marker.call(d3.behavior.drag().origin(function(point) {
                     return {
                       y : y[point.factorName](point.serie.offerings[point.factorName])
                     };
@@ -604,12 +583,15 @@ angular.module('strategycanvasFrontendApp')
                                             }
                       );
                     }else if(v < -0.10){
-                      point.serie.offerings[point.factorName] = undefined;
-                      d3.select(this).remove();
-                      scope.$apply(function(){
-                        scope.notifyOfferingChange(point.serie, point.factorName, point.serie.offerings[point.factorName]);
-                        $window.ga('send', 'event', 'offering', 'remove', chart.editCode);
-                      });
+                        point.serie.offerings[point.factorName] = undefined;
+                        d3.select(this)
+                      .attr('transform', function(d){ return 'translate('+(x.rangeBand()/2)+',0)';})
+                      .select('path')
+                      .attr('d', function(d){ return d3.svg.symbol()
+                                                     .type(d.serie.symbol)
+                                                     .size(function(){return 0 ;})();
+                                            }
+                      );
                     }else{
                       point.serie.offerings[point.factorName] = Math.max(0, Math.min(1, v));
                       d3.select(this)
@@ -622,12 +604,16 @@ angular.module('strategycanvasFrontendApp')
                       if( point.serie.offerings[point.factorName] !== undefined ){
                         point.serie.offerings[point.factorName] = Math.max(0, Math.min(1, point.serie.offerings[point.factorName]));
                         scope.$apply(function(){
-                          scope.notifyOfferingChange(point.serie, point.factorName, point.serie.offerings[point.factorName]);
-                          $window.ga('send', 'event', 'offering', 'edit', chart.editCode);
+                          chart.notifyOfferingChange(point.serie, point.factorName, point.serie.offerings[point.factorName]);
+                          log.event('offering', 'edit', chart.editCode);
                         });
+                      }else{
+                         scope.$apply(function(){
+                            chart.notifyOfferingChange(point.serie, point.factorName, point.serie.offerings[point.factorName]);
+                            log.event('offering', 'remove', chart.editCode);
+                          });
                       }
-                  })
-                );
+                  }));
               }
               maybeTransiton(marker).attr('transform', function(d){ return 'matrix(1, 0, 0, 1, '+(x.rangeBand()/2)+', '+y[d.factorName](d.serie.offerings[d.factorName])+')';});
 
@@ -637,8 +623,7 @@ angular.module('strategycanvasFrontendApp')
               seriesOrder = chart.series.map(function(serie){ return serie.business;}).join('');
               
             }
-scope.$watch('chart', drawChart, true);//watch
-scope.$watch('profile', drawChart, true);//watch
+scope.$watch('[chart.series, chart.factors, profile]', drawChart, true);//watch
           }
     };
   });

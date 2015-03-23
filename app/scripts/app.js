@@ -16,7 +16,9 @@ angular
     'ngRoute',
     'ngSanitize',
     'ngTouch',
-    'ngMaterial'
+    'ngMessages',
+    'ngMaterial',
+    'ui.validate'
   ])
   .config(function ($routeProvider) {
     $routeProvider
@@ -32,10 +34,10 @@ angular
         redirectTo: '/'
       });
   })
-  .run(['$window', '$location', '$rootScope', 'localDS', function($window, $location, $rootScope, localDS){
+  .run(['$location', '$rootScope', 'localDS', 'log', function($location, $rootScope, localDS, log){
       $rootScope.$on('$routeChangeSuccess', function(){
         var path = $location.path();
-        $window.ga('send', 'pageview', {'page': path});
+        log.pageview({'page': path});
         if(path === '/'){
           var lastOpen = localDS.lastOpen();
           if(lastOpen){

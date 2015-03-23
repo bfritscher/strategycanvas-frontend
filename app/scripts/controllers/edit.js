@@ -8,7 +8,7 @@
  * Controller of the strategycanvasFrontendApp
  */
 angular.module('strategycanvasFrontendApp')
-  .controller('EditCtrl', function ($scope, dashs, $http, $location, $routeParams, $window, $mdDialog, $mdSidenav, localDS, chart ) {
+  .controller('EditCtrl', function ($scope, $http, $location, $routeParams, $window, $mdDialog, $mdSidenav, localDS, chart, log, com) {
     //for now keep it local, if global we have to handle unsubscribe of handlers
     
     $scope.localDS = localDS;
@@ -16,15 +16,6 @@ angular.module('strategycanvasFrontendApp')
     $scope.loggedInUser  = loggedInUser;
     //TODO change;
     $scope.baseUri = baseUri;
-       
-    $scope.markerEditor = {
-      serie: undefined,
-      top:0,
-      left:0,
-      colors: chart.colors,
-      symbols: chart.symbols,
-      dashs: dashs  
-    };
     
     $scope.chat = {
       round: {}, //TODO handle cleanup
@@ -35,19 +26,7 @@ angular.module('strategycanvasFrontendApp')
       myMsg: '',
       id: 0
     };
-    
-    //dialog states
-    $scope.dialog = {
-      valueCurve: false,
-      remove: false,
-      add: false,
-      //recent: false,
-      //disconnected: false,
-      //notfound: false,
-      //permissiondenied: false,
-      login: false
-    };
-    
+
     $scope.profile = {
       markerSize: 24 //TODO: save to localstorage or online?
     };
@@ -57,27 +36,7 @@ angular.module('strategycanvasFrontendApp')
     };
       
     $scope.chart = chart;
-    
-    //to handle cancel in dialog
-    $scope.temp = {
-      chartTitle: '',
-      serie: {
-        business: '',
-        color: '',
-        symbol: '',
-        dash: '0',
-        offerings: {}
-      },
-      factor:{
-        name: ''
-      },
-      remove: {
-        name: null,
-        action: null,
-        data: null
-      }
-    };
-    
+        
     $scope.notes = {
       width: '0',
       widthOpen: 250
@@ -85,10 +44,6 @@ angular.module('strategycanvasFrontendApp')
 
     /*    
     $scope.connectedChatUsers = function(){
-      return 'TODO';
-    };
-    
-    $scope.manualMoveSerieToTop = function(){
       return 'TODO';
     };
     
@@ -111,6 +66,10 @@ angular.module('strategycanvasFrontendApp')
       $mdSidenav('right').toggle();
     };
     
+    $scope.createNewChart = function createNewChart(){
+      $location.replace().path('/edit/new');
+    };
+    
     var body = angular.element(document.body);
     
     $scope.showEditTitle = function showEditTitle($event){
@@ -121,16 +80,14 @@ angular.module('strategycanvasFrontendApp')
         controller: function editTitleCtrl($scope, $mdDialog, chartTitle) {
           $scope.chartTitle = chartTitle;
           $scope.save = function() {
-            $mdDialog.hide($scope.chartTitle);
+            $mdDialog.hide();
+            chart.notifyChartOptions({title: $scope.chartTitle});
           };
           $scope.cancel = function() {
             $mdDialog.cancel();
           };
         },
         locals: { chartTitle: $scope.chart.title }
-      })
-      .then(function(chartTitle){
-        $scope.chart.title = chartTitle;
       });
     };
     
@@ -140,7 +97,7 @@ angular.module('strategycanvasFrontendApp')
         clickOutsideToClose : true,
         targetEvent: $event,
         templateUrl: 'handbook.html',
-        controller: function handbookCtrl($scope, $mdDialog) {
+        controller: function handbookCtrl($scope) {
           $scope.handbook = {
             urlPrefix : 'views/handbook/',
             pages : [
@@ -181,6 +138,39 @@ angular.module('strategycanvasFrontendApp')
       });
     };
     
+    
+    $scope.showMarkerEditor = function showMarkerEditor($event, serie){
+      var beforeChange = serie.color +  serie.symbol + serie.dash; 
+      $mdDialog.show({
+        parent: body,
+        clickOutsideToClose : true,
+        hasBackdrop : false,
+        targetEvent: $event,
+        templateUrl: 'markerEditor.html',
+        controller: function markerEditorCtrl($scope, $mdDialog, dashs, chart, serie, top, left) {
+          $scope.markerEditor = {
+            serie: serie,
+            top: top,
+            left: left,
+            colors: chart.colors,
+            symbols: chart.symbols,
+            dashs: dashs  
+          };
+        },
+        locals: {
+          serie: serie,
+          top: $event.clientY + 20,
+          left: Math.max(0, $event.clientX - 220)
+        }
+      })
+      .then(null, function() {
+        if(beforeChange !==  serie.color +  serie.symbol +  serie.dash){
+          //TODO chart.notifySerieChange(serie);
+          console.log('changed');
+        }
+      });
+    };
+    
     $scope.showRecentDialog = function showRecentDialog($event){
       $mdDialog.show({
         parent: body,
@@ -207,71 +197,86 @@ angular.module('strategycanvasFrontendApp')
       });
     };
        
-    $scope.showValueCurveDialog = function showValueCurveDialog(){
-      $scope.dialog.valueCurve = true;
+    $scope.showAddDialog = function showAddDialog($event, type){
+      $mdDialog.show({
+        parent: body,
+        clickOutsideToClose : false,
+        targetEvent: $event,
+        templateUrl: 'addDialog.html',
+        controller: function addDialogCtrl($scope, $mdDialog, chart, type) {
+          if(type === 'serie'){
+            $scope.title = 'Add a new value curve';
+            $scope.infoMsg = 'enter one value curve name per line';
+            $scope.validate = chart.businessNotInUse;
+            $scope.add = function() {
+              $mdDialog.hide();
+              chart.notifySerieAdd($scope.name);
+            };
+          }
+          if(type === 'factor'){
+            $scope.title = 'Add a new factor';
+            $scope.infoMsg = 'enter one factor name per line';
+            $scope.validate = chart.factorNotInUse;
+            $scope.add = function() {
+              $mdDialog.hide();
+              chart.notifyAddFactor($scope.name);
+            };
+          }
+          $scope.cancel = function() {
+            $mdDialog.cancel();
+          };
+        },
+        locals: {type: type}
+      });
     };
     
-    $scope.showRemoveDialog = function showRemoveDialog(type, data){
-      $scope.temp.remove.type = type;
-      if(type === 'serie'){
-        $scope.temp.remove.name =  data.business;
-        $scope.temp.remove.newname =  data.business;
-        $scope.temp.remove.remove = function(){
-          $scope.dialog.remove = false;
-          $scope.notifySerieRemove(data);
-          $window._gaq.push(['_trackEvent', 'serie', 'remove', $scope.chart.editCode]);
-        };
-        $scope.temp.remove.update = function(){
-          $scope.dialog.remove = false;
-          if( $scope.temp.remove.newname !=  $scope.temp.remove.name){
-            $window._gaq.push(['_trackEvent', 'serie', 'edit', $scope.chart.editCode]);
-            var newSerie = angular.copy(data);
-            newSerie.business = $scope.temp.remove.newname;
-            $scope.notifySerieRemove(data);
-            //if using a name that exist remove old serie
-            var index = $scope.chart.series.map(function(serie){return serie.business;}).indexOf(newSerie.business);
-            if(index > -1){
-               $scope.chart.series.splice(index, 1);
-            }
-            $scope.chart.series.push(newSerie);
-            $scope.notifySerieChange(newSerie);
-            
-          }
-        };
-      }else if(type === 'factor'){
-        $scope.temp.remove.name =  data;
-        $scope.temp.remove.newname =  data;
-        $scope.temp.remove.remove = function(){
-          $scope.dialog.remove = false;
-          $scope.removeFactor(data);
-          $window._gaq.push(['_trackEvent', 'factor', 'remove', $scope.chart.editCode]);
-        };
-        $scope.temp.remove.update = function(){
-          $scope.dialog.remove = false;
-          //TODO better data structure for factors
-          var factor = $scope.temp.remove.newname,
-          oldFactor = $scope.temp.remove.name; 
-          if( factor !=  oldFactor){
-            $window._gaq.push(['_trackEvent', 'factor', 'edit', $scope.chart.editCode]);
-            $scope.chart.factors[$scope.chart.factors.indexOf(oldFactor)] = factor;
-            $scope.notifyFactorsChange($scope.chart.factors);
-            //copy offerings
-            //hate side effect...
-            var localseries = $scope.chart.series.slice(0);
-            for(var i=0; i < localseries.length;i++){
-              var serie = localseries[i];
-              if(serie.offerings.hasOwnProperty(oldFactor)){
-                //TODO: fix bug of side effects of reordering series
-                $scope.notifyOfferingChange(serie, factor, serie.offerings[oldFactor]);
-              }
-            }
-          }
-        };
-      }else{
-        return
-      }
+    $scope.showRemoveDialog = function showRemoveDialog($event, type, data){
       
-      $scope.dialog.remove = true;
+      $mdDialog.show({
+        parent: body,
+        clickOutsideToClose : false,
+        targetEvent: $event,
+        templateUrl: 'removeDialog.html',
+        controller: function addDialogCtrl($scope, $mdDialog, chart, type, data) {
+          if(type === 'serie'){
+            $scope.title = data.business;
+            $scope.name =  data.business;
+            $scope.validate = chart.businessNotInUse;
+            $scope.remove = function(){
+              $mdDialog.hide();
+              chart.notifySerieRemove(data);
+            };
+            $scope.update = function(){
+              $mdDialog.hide();
+              if( $scope.title !==  $scope.name){
+                log.event( 'serie', 'edit', chart.editCode);
+                var newSerie = angular.copy(data);
+                newSerie.business = $scope.name;
+                chart.notifySerieRemove(data);
+                chart.notifySerieChange(newSerie)
+                
+              }
+            };
+          }
+          if(type === 'factor'){
+            $scope.title = data;
+            $scope.name = data;
+            $scope.validate = chart.factorNotInUse;
+            $scope.remove = function(){
+              $mdDialog.hide();
+              chart.notifyFactorRemove(data);
+            };
+            $scope.update = function(){
+              $mdDialog.hide();
+              chart.notifyFactorReplace($scope.title, $scope.name);
+            };
+          }
+          $scope.cancel = function() {
+            $mdDialog.cancel();
+          };
+        },
+        locals: {type: type, data: data}
+      });
     };
     
     
@@ -287,7 +292,7 @@ angular.module('strategycanvasFrontendApp')
         .targetEvent($event);
         
       $mdDialog.show(confirm).then(function() {
-        $window._gaq.push(['_trackEvent', 'chart', 'new', $scope.chart.viewCode]);
+        log.event( 'chart', 'new', $scope.chart.viewCode);
         $location.path('/edit/new');
       }, function() {
         //log cancel?
@@ -305,7 +310,7 @@ angular.module('strategycanvasFrontendApp')
         .targetEvent($event);
         
       $mdDialog.show(confirm).then(function() {
-        $window._gaq.push(['_trackEvent', 'chart', 'copy', $scope.chart.viewCode]);
+        log.event( 'chart', 'copy', $scope.chart.viewCode);
         //TODO:maybe show spinner
         //FIX: baseUri
         $http({method: 'POST', url: baseUri + 'api/chartcopy', data: {viewCode: $scope.chart.viewCode}})
@@ -329,7 +334,7 @@ angular.module('strategycanvasFrontendApp')
         .targetEvent($event);
         
       $mdDialog.show(confirm).then(function() {
-        //TODO createNewChart()
+        $scope.createNewChart();
       }, function() {
         $scope.showRecentDialog($event);
       });
@@ -346,7 +351,7 @@ angular.module('strategycanvasFrontendApp')
         .targetEvent($event);
         
       $mdDialog.show(confirm).then(function() {
-        //TODO createNewChart()
+        $scope.createNewChart();
       }, function() {
         $scope.showRecentDialog($event);
       });
@@ -442,36 +447,10 @@ angular.module('strategycanvasFrontendApp')
       }
     });
     
+    
     */
-        
-    $scope.downloadCSV = function downloadCSV(){
-      //TODO: handle , ' "
-      var table = [['factor\\models']];
-      $scope.chart.factors.forEach(function(factor, j){
-        table[j+1] = [factor];
-        $scope.chart.series.forEach(function(serie, i){
-          if(j==0){
-            table[0].push(serie.business);		
-          }
-          table[j+1].push(serie.offerings[factor]);
-        });
-      });
-      
-      
-      var csv = table.map(function(row){
-        return row.join(',');
-      }).join("\n");
-      $window._gaq.push(['_trackPageview', $location.path() + '/csv']);
-      //TODO: use with server or a:download.click for filename 
-      window.open("data:application/octet-stream;charset=utf-8," + encodeURIComponent(csv));
-    };
-    
-    $scope.downloadJSON = function downloadJSON(){
-      $window._gaq.push(['_trackPageview', $location.path() + '/json']);
-      //TODO: use with server or a:download.click for filename 
-      window.open("data:application/octet-stream;charset=utf-8," + encodeURIComponent(JSON.stringify($scope.chart)));
-    };
-    
+       
+    /*
     //watch to lazy too make directives/components just for that
     //always show last message at the bottom
     $scope.$watch('chat.messages',function(){
@@ -481,6 +460,36 @@ angular.module('strategycanvasFrontendApp')
       }, 100);
             
     }, true);
+    */
+        
+    $scope.downloadCSV = function downloadCSV(){
+      //TODO: handle , ' "
+      var table = [['factor\\models']];
+      $scope.chart.factors.forEach(function(factor, j){
+        table[j+1] = [factor];
+        $scope.chart.series.forEach(function(serie, i){
+          if(j===0){
+            table[0].push(serie.business);
+          }
+          table[j+1].push(serie.offerings[factor]);
+        });
+      });
+      
+      
+      var csv = table.map(function(row){
+        return row.join(',');
+      }).join('\n');
+      log.pageview({page: $location.path() + '/csv'});
+      //TODO: use with server or a:download.click for filename 
+      $window.open('data:application/octet-stream;charset=utf-8,' + encodeURIComponent(csv));
+    };
+    
+    $scope.downloadJSON = function downloadJSON(){
+      log.pageview({page: $location.path() + '/json'});
+      //TODO: use with server or a:download.click for filename 
+      $window.open('data:application/octet-stream;charset=utf-8,' + encodeURIComponent(JSON.stringify($scope.chart)));
+    };
+        
     var doit;
     $(window).resize(function() {
         //$('#chat-content').height($(window).height()-117-$('#legends').offset().top);

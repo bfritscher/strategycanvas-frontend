@@ -8,14 +8,16 @@
  * Service in the strategycanvasFrontendApp.
  */
 angular.module('strategycanvasFrontendApp')
-  .service('chart', function () {
+  .service('chart', function (log) {
     var self = this;
-    
+    /* jshint ignore:start */
     var chart = {"id":159546,"viewCode":"Qj2Ww","editCode":"BQULV880mt","title":"Strategy Canvas: Southwest Airlines","description":"Welcome to StrategyCanvas.org!\n\nThis demo canvas was created for you. You can edit it or start from a new empty canvas by clicking the new document icon.\n\nThis tool helps you design a strategy canvas with value curves like they are proposed by in the Blue Ocean Strategy by W. Chan Kim and Renée Mauborgne (2002, 2005)\n\nFor more explanation, check out the handbook (help icon on top).\n\nIn this sample, you can see that:\n\n\"The strategic profile of Southwest Airlines differs dramatically from those of its competitors in the short-haul airline industry. Note how Southwest’s profile has more in common with the car's than with the profile of other airlines.\" (Harvard Business Review, Vol. 80, No. 6, June 2002)\n\nHINT: Live collaborative editing is supported; just share the link with a colleague!\n","factors":["meals","price","lounges","seating choices","hub connectivity","friendly service","speed","frequent departures"],"series":[{"id":159572,"business":"Car","color":"#7f7f7f","symbol":"circle","dash":"0","offerings":{"frequent departures":1,"speed":0,"hub connectivity":0,"lounges":0,"seating choices":0,"friendly service":0,"meals":0,"price":0.089},"$$hashKey":"017"},{"id":159573,"business":"Other airlines","color":"#e377c2","symbol":"circle","dash":"0","offerings":{"seating choices":0.9301204819277108,"meals":0.5,"hub connectivity":0.52,"speed":0.709,"lounges":0.6,"frequent departures":null,"price":0.671,"friendly service":0.74},"$$hashKey":"01A"},{"id":159571,"business":"Southwest","color":"#7f7f7f","symbol":"circle","dash":"0","offerings":{"price":0.15,"speed":1,"seating choices":0.05,"lounges":0.101,"hub connectivity":0.04,"frequent departures":0.8,"friendly service":0.91,"meals":0.179},"$$hashKey":"01D"}],"lastUpdated":"2015-03-20T09:58:16Z","dirty":false};    
+    /* jshint ignore:end */
     this.series = chart.series;
     this.factors = chart.factors;
-    this.title = chart.tile;
+    this.title = chart.title;
     this.description = chart.description;
+    this.lastSentChartDescription = chart.description;
     this.editCode = 123;
     this.viewCode = 123;
     
@@ -32,7 +34,12 @@ angular.module('strategycanvasFrontendApp')
       },
       factor:{
         name: ''
-      }
+      },
+      
+    };
+    
+    var com = {
+      send: function(){}
     };
     
   
@@ -46,13 +53,13 @@ angular.module('strategycanvasFrontendApp')
           lastCalled = 0;
 
       function trailingCall() {
-        lastCalled = new Date;
+        lastCalled = new Date();
         timeoutId = null;
         result = func.apply(thisArg, args);
       }
 
       return function() {
-        var now = new Date,
+        var now = new Date(),
             remain = wait - (now - lastCalled);
 
         args = arguments;
@@ -73,12 +80,16 @@ angular.module('strategycanvasFrontendApp')
     function getUnusedColor(symbol){
       var series = self.series;
       if(symbol){
-        series = series.filter(function(serie){ serie.symbol === symbol; });
+        series = series.filter(function(serie){
+          return serie.symbol === symbol;
+        });
       }
-      var usedColors =  series.map(function(serie){return serie.color;});
+      var usedColors =  series.map(function(serie){
+        return serie.color;
+      });
       for(var i=0; i< self.colors.length; i++){
         var color = self.colors[i];
-        if(usedColors.indexOf(color) == -1){
+        if(usedColors.indexOf(color) === -1){
           return color;
         }
       }
@@ -93,7 +104,7 @@ angular.module('strategycanvasFrontendApp')
       //for symbol get free color
       for(var i=0; i< self.symbols.length; i++){
         var symbol = self.symbols[i];
-        var color = getUnusedColor(symbol);
+        color = getUnusedColor(symbol);
         if(color !== undefined){
           return {color: color, symbol: symbol, dash: '0'};
         }
@@ -127,6 +138,264 @@ angular.module('strategycanvasFrontendApp')
       self.temp.factor.name = getUniqueName('Factor', self.factors);
     }
     updateNextFactor();
+    
+    function moveSerieToTop(serie){
+      var index = self.series.indexOf(serie);
+      if(index < self.series.length-1){
+        self.series.push(self.series.splice(index, 1)[0]);
+      }
+    }
+    
+    function getSerie(name){
+      var serie;
+      for(var i=0; i < self.series.length; i++){
+        serie = self.series[i];
+        if(serie.business === name){
+          return serie;
+        }
+      }
+      return;
+    }
+    
+    function getSerieOrCreate(name){
+      var serie = getSerie(name);
+      if(!serie){
+        serie = self.addSerie(name)[0];
+      }
+      return serie;
+    }
+    
+    //external operations available on chart
+    this.registerCom = function(c){
+      com = c;
+    };
+    
+    this.manualMoveSerieToTop = function(serie){
+      moveSerieToTop(serie);
+      log.event('serie', 'movetotop', self.viewCode);
+    };
+    
+    //validators
+    this.businessNotInUse = function businessNotInUse(value){
+      return self.series.map(function(serie){return serie.business;}).indexOf(value) === -1;
+    };
+    
+    this.factorNotInUse = function factorNotInUse(value){
+        return self.factors.indexOf(value) === -1;
+    };
+    
+    //update without notifications
+    
+    this.setOfferingBySerie = function(serie, factorName, value){
+      moveSerieToTop(serie);
+      serie.offerings[factorName] = value;
+    };
+    
+    this.setOfferingByName = function(serieName, factorName, value){
+      var serie = getSerieOrCreate(serieName);
+      self.setOfferingBySerie(serie, factorName, value);
+    };
+        
+    //TODO: refator to addSeries + add/updateSerie...
+    this.addSerie = function addSerie(name){
+      //TODO: refactor to not use temp
+      updateNextMarker();
+      if(!name){
+        name = self.temp.serie.business;
+      }
+      var lines = name.split(/\r\n|\r|\n/);
+      //if we allow choice in future
+      var addedSeries = [];
+      lines.forEach(function(business){
+        if(business !== '' && self.businessNotInUse(business)){
+          var serie = getUnusedMarker();
+          serie.offerings = {}; //TODO should not be needed
+          serie.business = business;
+          self.series.push(serie);
+          addedSeries.push(serie);
+          log.event('serie', 'add', self.editCode);
+        }
+      });
+      return addedSeries;
+    };
+    
+    this.updateSerie = function updateSerie(data){
+      var serie = getSerieOrCreate(data.business);
+      angular.extend(serie.offerings, data.offerings);
+      serie.color = data.color;
+      serie.symbol = data.symbol;
+      serie.dash = data.dash;
+    };
+    
+    this.removeSerie = function removeSerie(serie){
+      var index = self.series.indexOf(serie); 
+      if( index >= 0){
+        self.series.splice(index, 1);
+      }
+    };
+    
+    this.removeSerieByName = function removeSerieByName(name){
+      self.removeSerie(getSerie(name));
+    };
+    
+    
+    this.updateFactors = function updateFactors(factors){
+      if(self.factors.join('') != factors.join('')){
+        self.factors = factors;
+      }
+      
+    }
+    
+    this.removeFactor = function removeFactor(factor){
+      self.factors.splice(self.factors.indexOf(factor), 1);
+    };
+    
+    this.updateChartOptions = function updateChartOptions(options){
+      for(var key in options){
+        if(['title', 'patches'].indexOf(key) > -1){
+          if(key === 'patches'){
+            var result = diffMatchPath.patch_apply(diffMatchPath.patch_fromText(options[key]), self.description);
+            self.description = result[0];
+            self.lastSentChartDescription = self.description;
+          }else{
+            self[key] = options[key];
+          }
+        }
+      }
+    }
+    
+    //update with notifications
+    
+    //add point to existing serie which has none or create new serie
+    this.addOffering = function(factorName, value){
+      for(var i=self.series.length-1; i >= 0; i--){
+        if(self.series[i].offerings[factorName] === undefined){
+          self.notifyOfferingChange(self.series[i], factorName, value);
+          log.event('offering', 'add', self.editCode);
+          return;
+        }
+      }
+      var series = self.notifySerieAdd();
+      log.event('serie', 'autoadd', self.editCode);
+      self.notifyOfferingChange(series[0], factorName, value);
+      log.event('offering', 'add', self.editCode);
+    };
+    
+    this.notifyAddFactor = function notifyAddFactor(name){
+      var lines = name.split(/\r\n|\r|\n/);
+      lines.forEach(function(factor){
+        if(factor !== '' && self.factorNotInUse(factor)){
+          self.factors.push(factor);
+        }
+      });
+      self.notifyFactorsChange(self.factors);
+      //$window._gaq.push(['_trackEvent', 'factor', 'add', $scope.chart.editCode]);
+      //TODO move
+      setTimeout(function(){
+        $('#mychart').animate({'scrollLeft': $('#mychart').width()});
+      }, 100);
+    };
+    
+    
+    this.notifyOfferingChange = function(serie, factor, value){
+      self.setOfferingBySerie(serie, factor, value);
+      
+      com.send('edit', {
+          action: 'offering',
+          editCode: self.editCode,
+          business: serie.business,
+          factor: factor,
+          value: value
+        });
+    };
+    
+    this.notifySerieAdd = function(name){
+      var addedSeries = self.addSerie(name);
+      addedSeries.forEach(function(serie){
+        self.notifySerieChange(serie);
+      });
+      return addedSeries;
+    };
+    
+    this.notifySerieChange = function notifySerieChange(serie){
+      self.updateSerie(serie);
+      com.send('edit', {
+        action: 'serie',
+        editCode: self.editCode,
+        business: serie.business,
+        color: serie.color,
+        symbol: serie.symbol,
+        dash: serie.dash,
+        offerings: serie.offerings
+        });
+      //$window._gaq.push(['_trackEvent', 'serie', 'edit', $scope.chart.editCode]);
+    };
+    
+    this.notifySerieRemove = function(serie){
+      self.removeSerie(serie);
+      log.event( 'serie', 'remove', self.editCode);
+      com.send('edit', {
+          action: 'serieRemove',
+          editCode: self.editCode,
+          business: serie.business
+        });
+    };
+    
+    this.notifyFactorRemove = function notifyFactorRemove(factor){
+      self.removeFactor(factor);
+      self.notifyFactorsChange(self.factors);
+      log.event( 'factor', 'remove', self.editCode);
+    }
+    
+    this.notifyFactorsChange = function(factors){
+      self.factors = factors;
+      com.send('edit', {
+        action: 'factors',
+          editCode: self.editCode,
+          factors: factors
+        });
+    };
+    
+    this.notifyFactorReplace = function(oldFactor, factor){
+      if( factor !==  oldFactor){
+        self.factors[self.factors.indexOf(oldFactor)] = factor;
+        self.notifyFactorsChange(self.factors);
+        log.event( 'factor', 'edit', self.editCode);
+        //copy offerings
+        //hate side effect...
+        var localseries = self.series.slice(0);
+        for(var i=0; i < localseries.length;i++){
+          var serie = localseries[i];
+          if(serie.offerings.hasOwnProperty(oldFactor)){
+            //TODO: fix bug of side effects of reordering series
+            self.notifyOfferingChange(serie, factor, serie.offerings[oldFactor]);
+          }
+        }
+      }
+    };
+    
+    this.notifyChartOptions = function(options){
+      this.updateChartOptions(options);
+      com.send('edit', {
+        action: 'chart',
+          editCode: self.editCode,
+          options: options
+        });
+      //$window._gaq.push(['_trackEvent', 'chart', 'title', $scope.chart.editCode]);
+    };
+    
+    var notifyChartDescription = function(){
+      var  patches = diffMatchPath.patch_toText(diffMatchPath.patch_make(self.lastSentChartDescription, self.description));
+      self.lastSentChartDescription = self.description;
+      com.send('edit', {
+        action: 'chart',
+          editCode: self.editCode,
+          options: {patches: patches}
+        });
+      //$window._gaq.push(['_trackEvent', 'chart', 'description', $scope.chart.editCode]);
+    };
+    
+    this.notifyChartDescription = throttle(notifyChartDescription, 1500);
     
     
 /*
@@ -215,60 +484,7 @@ angular.module('strategycanvasFrontendApp')
 
           //subscribe to edit notifications
           
-            $scope.grailsEvents.on('edit_' + data.viewCode, function(data){
-              $scope.$apply(function(){
-                switch(data.action){
-                  case 'offering':
-                    var serie = $scope.getSerieByBusiness(data.business);
-                    $scope.setOffering(serie, data.factor, data.value);
-                    break;
-                  case 'factors':
-                    if($scope.chart.factors.join('') != data.factors.join('')){
-                      $scope.remoteUpdate = true; 
-                      $scope.chart.factors = data.factors;
-                      //update add offerings
-                      if(data.offerings){
-                        $scope.chart.series.forEach(function(serie){
-                          if(data.offerings.hasOwnProperty(serie.business)){
-                            serie.offerings[serie.business] = data.offerings[serie.business];
-                          }
-                        });
-                      }
-                    }
-                    break;
-                  case 'serie':
-                    var serie = $scope.getSerieByBusiness(data.business);
-                    angular.extend(serie.offerings, data.offerings);
-                    data.offerings;
-                    //merge offerings
-                    
-                      
-                      serie.color = data.color;
-                    serie.symbol = data.symbol;
-                    serie.dash = data.dash;
-                    break;
-                  case 'serieRemove':
-                    var serie = $scope.getSerieByBusiness(data.business);
-                    $scope.removeSerie(serie);
-                    break;
-                  case 'chart':
-                    if(data.localId ==  $scope.grailsEvents.globalTopicSocket.request.localId) return;
-                    for(var key in data.options){
-                      if(data.options.hasOwnProperty(key)){
-                        if(key === 'patches'){
-                          var result = diffMatchPath.patch_apply(diffMatchPath.patch_fromText(data.options[key]), $scope.chart.description);
-                          $scope.chart.description = result[0];
-                          $scope.temp.lastSentChartDescription = $scope.chart.description;
-                          
-                        }else{
-                          $scope.chart[key] = data.options[key];
-                        }
-                      }
-                    }
-                    break;
-                }
-              });
-            });
+            
             
           //all ready, apply loaded data
         $scope.chart = data; 
@@ -288,19 +504,7 @@ angular.module('strategycanvasFrontendApp')
             }
           }
       });    
-      
-      $scope.getSerieByBusiness = function(business){
-      var serie;
-      for(var i=0; i < $scope.chart.series.length; i++){
-        serie = $scope.chart.series[i];
-        if(serie.business == business) return serie;
-      }
-      serie = {business: business, offerings:{}};
-      //TODO: not good to go outside
-      $scope.chart.series.push(serie);
-      return serie;
-    };
-    
+          
     $scope.lookupChatUser = function(id){
       if($scope.chat.round[$scope.chat.actif].hasOwnProperty(id)){
         return $scope.chat.round[$scope.chat.actif][id];
@@ -329,169 +533,10 @@ angular.module('strategycanvasFrontendApp')
       $scope.chat.myMsg = "";
     };
     
-    $scope.notifyOfferingChange = function(serie, factor, value){
-      $scope.setOffering(serie, factor, value);
-      $scope.grailsEvents.send('edit', {
-        action: 'offering',
-          editCode: $scope.chart.editCode,
-          business: serie.business,
-          factor: factor,
-          value: value
-        });
-    };
     
-    $scope.notifyFactorsChange = function(factors){
-      $scope.chart.factors = factors;
-      $scope.grailsEvents.send('edit', {
-        action: 'factors',
-          editCode: $scope.chart.editCode,
-          factors: factors
-        });
-    };
     
-    $scope.notifySerieRemove = function(serie){
-      $scope.removeSerie(serie);
-      $scope.grailsEvents.send('edit', {
-        action: 'serieRemove',
-          editCode: $scope.chart.editCode,
-          business: serie.business
-        });
-    };
-    
-    $scope.notifyChartOption = function(){
-      $scope.chart.title = $scope.temp.chartTitle;
-      $scope.dialog.editTitle = false;
-      $scope.grailsEvents.send('edit', {
-        action: 'chart',
-          editCode: $scope.chart.editCode,
-          options: {title : $scope.chart.title}
-        });
-      $window._gaq.push(['_trackEvent', 'chart', 'title', $scope.chart.editCode]);
-    };
-    
-    var notifyChartDescription = function(){
-      if($scope.chart.editCode){
-        var  patches = diffMatchPath.patch_toText(diffMatchPath.patch_make($scope.temp.lastSentChartDescription, $scope.chart.description));
-        $scope.temp.lastSentChartDescription = $scope.chart.description;
-        $scope.grailsEvents.send('edit', {
-          action: 'chart',
-            editCode: $scope.chart.editCode,
-            options: {patches: patches}
-          });
-      }
-      $window._gaq.push(['_trackEvent', 'chart', 'description', $scope.chart.editCode]);
-    };
-    
-    $scope.notifyChartDescription = throttle(notifyChartDescription, 1500);
-    
-    $scope.setOffering = function(serie, factor, value){
-      $scope.moveSerieToTop(serie);
-      setTimeout(function(){
-        $scope.$apply(function(){
-          serie.offerings[factor] = value;
-        });
-      },100);
-    };
-    
-    $scope.addFactor = function addFactor(){
-      $scope.dialog.add = false;
-      var lines = $scope.temp.factor.name.split(/\r\n|\r|\n/);
-      lines.forEach(function(factor){
-        if(factor != "" && $scope.factorNotInUse(factor)){
-          $scope.chart.factors.push(factor);
-          $scope.notifyFactorsChange($scope.chart.factors);
-        }
-      });
-      $window._gaq.push(['_trackEvent', 'factor', 'add', $scope.chart.editCode]);
-      //dom :-(
-      setTimeout(function(){
-        $('#mychart').animate({'scrollLeft': $('#mychart').width()});
-      }, 100);
-    };
-    
-    $scope.removeFactor = function removeFactor(factor){
-      $scope.chart.factors.splice($scope.chart.factors.indexOf(factor), 1);
-      $scope.notifyFactorsChange($scope.chart.factors);
-    };
-    
-    //TODO: refactor
-    $scope.addSerie = function addSerie(){
-      $scope.dialog.valueCurve = false;
-      var lines = $scope.temp.serie.business.split(/\r\n|\r|\n/);
-      //if we allow choice in future
-      var serie = {color: $scope.temp.serie.color,
-           symbol:$scope.temp.serie.symbol,
-           dash: $scope.temp.serie.dash, offerings:{}};
-      var addedSeries = [];
-      lines.forEach(function(business){
-        if(business != "" && $scope.businessNotInUse(business)){
-          serie.business = business;
-          $scope.chart.series.push(serie);
-          addedSeries.push(serie);
-          $scope.notifySerieChange(serie);
-          serie = getUnusedMarker();
-          serie.offerings = {}; //TODO should not be needed
-        }
-      });
-      $window._gaq.push(['_trackEvent', 'serie', 'add', $scope.chart.editCode]);
-      
-      return addedSeries;
-    };
-    
-    $scope.notifySerieChange = function notifySerieChange(serie){
-      $scope.grailsEvents.send('edit', {
-        action: 'serie',
-          editCode: $scope.chart.editCode,
-          business: serie.business,
-          color: serie.color,
-        symbol: serie.symbol,
-        dash: serie.dash,
-        offerings: serie.offerings
-        });
-      $window._gaq.push(['_trackEvent', 'serie', 'edit', $scope.chart.editCode]);
-    };
-    
-    $scope.removeSerie = function removeSerie(serie){
-      $scope.moveSerieToTop(serie);
-      setTimeout(function(){
-        $scope.$apply(function(){
-          var index = $scope.chart.series.indexOf(serie); 
-          if( index >= 0){
-            $scope.chart.series.splice(index, 1);
-          }
-        });
-      },100);
-    };
-    
-    $scope.createNewChart = function createNewChart(){
-      $scope.dialog.notfound = false;
-      $scope.dialog.permissiondenied = false;
-      $location.replace().path('/edit/new');
-    };
-    
-    $scope.copyExample = function(){
-      $location.replace().path('/edit/new0');
-    };
-    
-    $scope.manualMoveSerieToTop = function(serie){
-      $scope.moveSerieToTop(serie);
-      $window._gaq.push(['_trackEvent', 'serie', 'movetotop', $scope.chart.viewCode]);
-    };
-    
-    $scope.moveSerieToTop = function moveSerieToTop(serie){
-      var index = $scope.chart.series.indexOf(serie);
-      if(index < $scope.chart.series.length-1){
-        $scope.chart.series.push($scope.chart.series.splice(index, 1)[0]);
-      }
-    };
-    
-    $scope.businessNotInUse = function businessNotInUse(value){
-        return $scope.chart.series.map(function(serie){return serie.business;}).indexOf(value) === -1;
-    };
-    
-    $scope.factorNotInUse = function factorNotInUse(value){
-        return $scope.chart.factors.indexOf(value) === -1;
-    };
+  
+
       
 
 */
