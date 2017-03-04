@@ -17,16 +17,6 @@ angular.module('strategycanvasFrontendApp')
     //TODO change;
     $scope.baseUri = baseUri;
 
-    $scope.chat = {
-      round: {}, //TODO handle cleanup
-      messages: [],
-      isVisible: false,
-      gotNewMsg: false,
-      actif: undefined,
-      myMsg: '',
-      id: 0
-    };
-
     $scope.profile = {
       markerSize: 24 //TODO: save to localstorage or online?
     };
@@ -73,6 +63,7 @@ angular.module('strategycanvasFrontendApp')
     var body = angular.element(document.body);
 
     $scope.showEditTitle = function showEditTitle($event){
+      $window._gaq.push(['_trackPageview',  $location.path() + '/editTitle/open']);
       $mdDialog.show({
         parent: body,
         targetEvent: $event,
@@ -92,12 +83,18 @@ angular.module('strategycanvasFrontendApp')
     };
 
     $scope.showHandbook = function showHandbook($event){
+      $window._gaq.push(['_trackPageview',  $location.path() + '/handbook/open']);
       $mdDialog.show({
         parent: body,
         clickOutsideToClose : true,
         targetEvent: $event,
         templateUrl: 'handbook.html',
-        controller: function handbookCtrl($scope, $mdDialog) {
+        controller: function handbookCtrl($scope, $mdDialog, $location) {
+          $scope.$watch('handbook.activePage', function(value, old){
+            if(value !== old){
+              $window._gaq.push(['_trackPageview', $location.path() + '/handbook/' + $scope.handbook.activePage.url]);
+            }
+          });
           $scope.close = function () {
             $mdDialog.hide();
           };
@@ -123,6 +120,7 @@ angular.module('strategycanvasFrontendApp')
     };
 
     $scope.showShareDialog = function showShareDialog($event){
+      $window._gaq.push(['_trackPageview',  $location.path() + '/share/open']);
       $mdDialog.show({
         parent: body,
         clickOutsideToClose : true,
@@ -143,6 +141,7 @@ angular.module('strategycanvasFrontendApp')
 
 
     $scope.showMarkerEditor = function showMarkerEditor($event, serie){
+      $window._gaq.push(['_trackPageview',  $location.path() + '/marker/open']);
       var beforeChange = serie.color +  serie.symbol + serie.dash;
       var panelPosition = $mdPanel.newPanelPosition()
         .relativeTo($event.target)
@@ -190,6 +189,18 @@ angular.module('strategycanvasFrontendApp')
     };
 
     $scope.showRecentDialog = function showRecentDialog($event){
+      $window._gaq.push(['_trackPageview',  $location.path() + '/recent/open']);
+      //TODO: load from api? if logged in
+      /*
+      $http({method: 'GET', url: baseUri + 'api/usercharts'})
+         .then(function(resp) {
+           resp.data.forEach(function(item){
+             localDS.addItem(item);
+             localDS.save();
+           });
+         });
+      */
+
       $mdDialog.show({
         parent: body,
         clickOutsideToClose : true,
@@ -216,6 +227,7 @@ angular.module('strategycanvasFrontendApp')
     };
 
     $scope.showAddDialog = function showAddDialog($event, type){
+      $window._gaq.push(['_trackPageview',  $location.path() + '/add/' + type + '/open']);
       $mdDialog.show({
         parent: body,
         clickOutsideToClose : false,
@@ -252,7 +264,7 @@ angular.module('strategycanvasFrontendApp')
     };
 
     $scope.showRemoveDialog = function showRemoveDialog($event, type, data){
-
+      $window._gaq.push(['_trackPageview',  $location.path() + '/edit/' + type + '/open']);
       $mdDialog.show({
         parent: body,
         clickOutsideToClose : false,
@@ -274,8 +286,7 @@ angular.module('strategycanvasFrontendApp')
                 var newSerie = angular.copy(data);
                 newSerie.business = $scope.name;
                 chart.notifySerieRemove(data);
-                chart.notifySerieChange(newSerie)
-
+                chart.notifySerieChange(newSerie);
               }
             };
           }
@@ -335,8 +346,8 @@ angular.module('strategycanvasFrontendApp')
         //TODO:maybe show spinner
         //FIX: baseUri
         $http({method: 'POST', url: baseUri + 'api/chartcopy', data: {viewCode: $scope.chart.viewCode}})
-          .success(function(data, status, headers, config) {
-            $location.path('/edit/' + data);
+          .then(function(resp) {
+            $location.path('/edit/' + resp.data);
           });
           //TODO: handle error
       }, function() {
@@ -392,78 +403,20 @@ angular.module('strategycanvasFrontendApp')
       });
     };
 
-    //GA watch dialog actions
-    for(var key in $scope.dialog){
-      (function(dialogId){
-        $scope.$watch('dialog.' + dialogId, function(value, old){
-          if(value !== old){
-            if(dialogId === 'remove'){
-              dialogId = $scope.temp.remove.type + '_edit';
-            }else if(dialogId === 'add'){
-              dialogId = 'factor_add';
-            }
-            else if(dialogId === 'valueCurve'){
-              dialogId = 'serie_add';
-            }
-            else if(dialogId === 'valueCurve'){
-              dialogId = $scope.temp.alertdialog.ga;
-            }
-
-
-            var path = $location.path() + '/'+ dialogId +'/';
-            if(value){
-              $window._gaq.push(['_trackPageview', path + 'open']);
-            }else{
-              $window._gaq.push(['_trackPageview', path + 'close']);
-            }
-          }
-        });
-      })(key);
-    }
-
-    $scope.$watch('advancedEntry', function(value, old){
-      if(value !== old){
-        if(value){
-          $window._gaq.push(['_trackPageview', $location.path() + '/'+ $scope.temp.remove.type +'/advanced']);
-        }else{
-          $window._gaq.push(['_trackPageview', $location.path() + '/'+ $scope.temp.remove.type + '/simple']);
-        }
-      }
-    });
-
-    $scope.$watch('handbook.activePage', function(value, old){
-      if(value !== old){
-        $window._gaq.push(['_trackPageview', $location.path() + '/handbook/' + $scope.handbook.activePage.url]);
-      }
-    });
-
     $scope.$watch('chart', function(chart){
       localDS.touchChart(chart);
     }, true);
-
-    $scope.$watch('dialog.recent', function(value){
-      if(value && $scope.loggedInUser){
-        $http({method: 'GET', url: baseUri + 'api/usercharts'})
-         .success(function(data, status, headers, config) {
-           data.forEach(function(item){
-             localDS.addItem(item);
-             localDS.save();
-           });
-         });
-
-      }
-    });
 
     $scope.downloadCSV = function downloadCSV(){
       //TODO: handle , ' "
       var table = [['factor\\models']];
       $scope.chart.factors.forEach(function(factor, j){
-        table[j+1] = [factor];
-        $scope.chart.series.forEach(function(serie, i){
-          if(j===0){
+        table[j + 1] = [factor];
+        $scope.chart.series.forEach(function(serie){
+          if(j === 0){
             table[0].push(serie.business);
           }
-          table[j+1].push(serie.offerings[factor]);
+          table[j + 1].push(serie.offerings[factor]);
         });
       });
 

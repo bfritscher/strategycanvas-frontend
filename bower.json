@@ -11,7 +11,7 @@
     "zocial": "*",
     "google-diff-match-patch": "^0.1.0",
     "momentjs": "^2.17.1",
-    "d3": "^3.0",
+    "d3": "3.0.8",
     "jquery.dragscrollable": "git@github.com:mvlandys/jquery.dragscrollable.git",
     "jquery": "^3.1.1",
     "jquery-mousewheel": "^3.1.12",

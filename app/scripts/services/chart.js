@@ -8,10 +8,11 @@
  * Service in the strategycanvasFrontendApp.
  */
 angular.module('strategycanvasFrontendApp')
-  .service('chart', function (log) {
+  .service('chart', function (log, $window) {
     var self = this;
+    var chart;
     /* jshint ignore:start */
-    var chart = {"id":159546,"viewCode":"Qj2Ww","editCode":"BQULV880mt","title":"Strategy Canvas: Southwest Airlines","description":"Welcome to StrategyCanvas.org!\n\nThis demo canvas was created for you. You can edit it or start from a new empty canvas by clicking the new document icon.\n\nThis tool helps you design a strategy canvas with value curves like they are proposed by in the Blue Ocean Strategy by W. Chan Kim and Renée Mauborgne (2002, 2005)\n\nFor more explanation, check out the handbook (help icon on top).\n\nIn this sample, you can see that:\n\n\"The strategic profile of Southwest Airlines differs dramatically from those of its competitors in the short-haul airline industry. Note how Southwest’s profile has more in common with the car's than with the profile of other airlines.\" (Harvard Business Review, Vol. 80, No. 6, June 2002)\n\nHINT: Live collaborative editing is supported; just share the link with a colleague!\n","factors":["meals","price","lounges","seating choices","hub connectivity","friendly service","speed","frequent departures"],"series":[{"id":159572,"business":"Car","color":"#7f7f7f","symbol":"circle","dash":"0","offerings":{"frequent departures":1,"speed":0,"hub connectivity":0,"lounges":0,"seating choices":0,"friendly service":0,"meals":0,"price":0.089},"$$hashKey":"017"},{"id":159573,"business":"Other airlines","color":"#e377c2","symbol":"circle","dash":"0","offerings":{"seating choices":0.9301204819277108,"meals":0.5,"hub connectivity":0.52,"speed":0.709,"lounges":0.6,"frequent departures":null,"price":0.671,"friendly service":0.74},"$$hashKey":"01A"},{"id":159571,"business":"Southwest","color":"#7f7f7f","symbol":"circle","dash":"0","offerings":{"price":0.15,"speed":1,"seating choices":0.05,"lounges":0.101,"hub connectivity":0.04,"frequent departures":0.8,"friendly service":0.91,"meals":0.179},"$$hashKey":"01D"}],"lastUpdated":"2015-03-20T09:58:16Z","dirty":false};
+    chart = {"id":159546,"viewCode":"Qj2Ww","editCode":"BQULV880mt","title":"Strategy Canvas: Southwest Airlines","description":"Welcome to StrategyCanvas.org!\n\nThis demo canvas was created for you. You can edit it or start from a new empty canvas by clicking the new document icon.\n\nThis tool helps you design a strategy canvas with value curves like they are proposed by in the Blue Ocean Strategy by W. Chan Kim and Renée Mauborgne (2002, 2005)\n\nFor more explanation, check out the handbook (help icon on top).\n\nIn this sample, you can see that:\n\n\"The strategic profile of Southwest Airlines differs dramatically from those of its competitors in the short-haul airline industry. Note how Southwest’s profile has more in common with the car's than with the profile of other airlines.\" (Harvard Business Review, Vol. 80, No. 6, June 2002)\n\nHINT: Live collaborative editing is supported; just share the link with a colleague!\n","factors":["meals","price","lounges","seating choices","hub connectivity","friendly service","speed","frequent departures"],"series":[{"id":159572,"business":"Car","color":"#7f7f7f","symbol":"circle","dash":"0","offerings":{"frequent departures":1,"speed":0,"hub connectivity":0,"lounges":0,"seating choices":0,"friendly service":0,"meals":0,"price":0.089},"$$hashKey":"017"},{"id":159573,"business":"Other airlines","color":"#e377c2","symbol":"circle","dash":"0","offerings":{"seating choices":0.9301204819277108,"meals":0.5,"hub connectivity":0.52,"speed":0.709,"lounges":0.6,"frequent departures":null,"price":0.671,"friendly service":0.74},"$$hashKey":"01A"},{"id":159571,"business":"Southwest","color":"#7f7f7f","symbol":"circle","dash":"0","offerings":{"price":0.15,"speed":1,"seating choices":0.05,"lounges":0.101,"hub connectivity":0.04,"frequent departures":0.8,"friendly service":0.91,"meals":0.179},"$$hashKey":"01D"}],"lastUpdated":"2015-03-20T09:58:16Z","dirty":false};
     /* jshint ignore:end */
     this.series = chart.series;
     this.factors = chart.factors;
@@ -42,8 +43,10 @@ angular.module('strategycanvasFrontendApp')
       send: function(){}
     };
 
-
-    var diffMatchPath = new diff_match_patch();
+    var diffMatchPath;
+    /* jshint ignore:start */
+    diffMatchPath = new diff_match_patch();
+    /* jshint ignore:end */
     //https://github.com/bestiejs/lodash/blob/v0.8.2/lodash.js#L3450
     function throttle(func, wait) {
       var args,
@@ -240,11 +243,11 @@ angular.module('strategycanvasFrontendApp')
 
 
     this.updateFactors = function updateFactors(factors){
-      if(self.factors.join('') != factors.join('')){
+      if(self.factors.join('') !== factors.join('')){
         self.factors = factors;
       }
 
-    }
+    };
 
     this.removeFactor = function removeFactor(factor){
       self.factors.splice(self.factors.indexOf(factor), 1);
@@ -262,7 +265,7 @@ angular.module('strategycanvasFrontendApp')
           }
         }
       }
-    }
+    };
 
     //update with notifications
 
@@ -289,7 +292,7 @@ angular.module('strategycanvasFrontendApp')
         }
       });
       self.notifyFactorsChange(self.factors);
-      //$window._gaq.push(['_trackEvent', 'factor', 'add', $scope.chart.editCode]);
+      $window._gaq.push(['_trackEvent', 'factor', 'add', self.chart.editCode]);
       //TODO move
       setTimeout(function(){
         $('#mychart').animate({'scrollLeft': $('#mychart').width()});
@@ -328,7 +331,7 @@ angular.module('strategycanvasFrontendApp')
         dash: serie.dash,
         offerings: serie.offerings
         });
-      //$window._gaq.push(['_trackEvent', 'serie', 'edit', $scope.chart.editCode]);
+      $window._gaq.push(['_trackEvent', 'serie', 'edit', self.editCode]);
     };
 
     this.notifySerieRemove = function(serie){
@@ -345,7 +348,7 @@ angular.module('strategycanvasFrontendApp')
       self.removeFactor(factor);
       self.notifyFactorsChange(self.factors);
       log.event( 'factor', 'remove', self.editCode);
-    }
+    };
 
     this.notifyFactorsChange = function(factors){
       self.factors = factors;
@@ -381,7 +384,7 @@ angular.module('strategycanvasFrontendApp')
           editCode: self.editCode,
           options: options
         });
-      //$window._gaq.push(['_trackEvent', 'chart', 'title', $scope.chart.editCode]);
+      $window._gaq.push(['_trackEvent', 'chart', 'title', self.editCode]);
     };
 
     var notifyChartDescription = function(){
@@ -392,7 +395,7 @@ angular.module('strategycanvasFrontendApp')
           editCode: self.editCode,
           options: {patches: patches}
         });
-      //$window._gaq.push(['_trackEvent', 'chart', 'description', $scope.chart.editCode]);
+      $window._gaq.push(['_trackEvent', 'chart', 'description', self.editCode]);
     };
 
     this.notifyChartDescription = throttle(notifyChartDescription, 1500);
@@ -413,85 +416,21 @@ angular.module('strategycanvasFrontendApp')
 
  //LoadChart
     $http({method: 'POST', url: baseUri + 'api/chartjson', data: {viewCode: $routeParams.viewCode, editCode: $routeParams.editCode}})
-      .success(function(data, status, headers, config) {
-          if($routeParams.editCode && $routeParams.editCode != data.editCode && data.editCode){
+      .then(function(resp) {
+          if($routeParams.editCode && $routeParams.editCode !== resp.data.editCode && resp.data.editCode){
             //close all dialogs first because of aterfacts
             $location.replace().path('/edit/' + data.editCode);
             return;
           }
 
-          //TODO move chat to seperate controller?
-        $(window).on('beforeunload', function(){
-          $scope.grailsEvents.send('chat', {
-            viewCode: $scope.chart.viewCode,
-              action: 'disconnected',
-              id: $scope.chat.id
-            });
-        });
-
-            $scope.grailsEvents.on('chat_' + data.viewCode, function(data){
-            if(data.action=="connected"){
-              $scope.$apply(function(){
-                $scope.chat.round[data.round] = {};
-                $scope.chat.id = $scope.grailsEvents.globalTopicSocket.request.localId;
-                $scope.grailsEvents.send('chat', {
-                  action: 'me',
-                  round: data.round,
-                  edit: $scope.chart.editCode != undefined,
-                  name: $scope.loggedInUser ? $scope.loggedInUser.username : undefined,
-                  viewCode: $scope.chart.viewCode,
-                    id: $scope.chat.id //TODO: should use better id
-                  });
-              });
-            }
-            else if(data.action=="me"){
-              $scope.$apply(function(){
-                if(data.id == $scope.chat.id){
-                  data.name = "me";
-                }
-                if(data.name == undefined){
-                  data.name = 'Anonymous User ' + data.id.slice(0,2);
-                }
-                if(!$scope.chat.round[data.round]){
-                  $scope.chat.round[data.round] = {};
-                }
-                $scope.chat.round[data.round][data.id] = {id: data.id, name: data.name, edit: data.edit};
-                //TODO choose by date + cleanup
-                $scope.chat.actif = data.round;
-              });
-            }else if(data.action=="disconnected"){
-              $scope.$apply(function(){
-                if ($scope.chat.actif && $scope.chat.round[$scope.chat.actif].hasOwnProperty(data.id)){
-                  delete $scope.chat.round[$scope.chat.actif][data.id];
-                  $scope.chat.messages.push({user:$scope.lookupChatUser(data.id), text:'has left', type:'status'});
-                }
-              });
-            }else if(data.action=="msg"){
-              $scope.$apply(function(){
-                $scope.chat.messages.push({user:$scope.lookupChatUser(data.id), text:data.msg, type:'msg'});
-                if(!$scope.chat.isVisible){
-                  $scope.chat.gotNewMsg = true;
-                }
-              });
-            }
-          });
-
-          $scope.grailsEvents.send('chat', {
-            viewCode: data.viewCode,
-              action: 'connected',
-              round: Math.random()
-            });
-
           //subscribe to edit notifications
 
-
-
           //all ready, apply loaded data
-        $scope.chart = data;
-        if($scope.chart.title === 'Strategy Canvas: Southwest Airlines'){
+        $scope.chart = resp.data;
+        if(self.title === 'Strategy Canvas: Southwest Airlines'){
           $scope.notes.width = 250;
         }
-        $scope.temp.lastSentChartDescription = $scope.chart.description;
+        $scope.temp.lastSentChartDescription = self.description;
       })
       .error(function(data, status, headers, config) {
           if(status === 404){
@@ -505,33 +444,6 @@ angular.module('strategycanvasFrontendApp')
           }
       });
 
-    $scope.lookupChatUser = function(id){
-      if($scope.chat.round[$scope.chat.actif].hasOwnProperty(id)){
-        return $scope.chat.round[$scope.chat.actif][id];
-      }
-      return {name: 'Anonymous User'};
-    };
-
-    $scope.connectedChatUsers = function(){
-      return $scope.chat.round[$scope.chat.actif] ? Object.keys($scope.chat.round[$scope.chat.actif]).length-1 : 0;
-    };
-
-    $scope.sendChatMessage = function($event){
-      if(navigator.userAgent.match(/iPad/i) != null){
-        $event.target.blur();
-      }
-      $event.preventDefault();
-      $scope.grailsEvents.send('chat', {
-        action: 'msg',
-        msg: $scope.chat.myMsg,
-        viewCode: $scope.chart.viewCode,
-          id: $scope.chat.id //TODO: should use better id
-        });
-
-      $window._gaq.push(['_trackEvent', 'chat', 'msg', $scope.chart.viewCode, $scope.chat.myMsg.length]);
-
-      $scope.chat.myMsg = "";
-    };
 
 
 */

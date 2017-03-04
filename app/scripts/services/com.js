@@ -9,13 +9,13 @@
  */
 angular.module('strategycanvasFrontendApp')
   .service('com', function (chart) {
-    
+
     chart.registerCom(this);
-    
+
     this.send = function(channel, payload){
       console.log(channel, payload);
     };
-    
+
     //$scope.grailsEvents.on('edit_' + data.viewCode, function(data){
     function handleEvent(data){
       switch(data.action){
@@ -39,7 +39,7 @@ angular.module('strategycanvasFrontendApp')
           chart.updateSerie(data);
           break;
         case 'serieRemove':
-          chart.removeSerieByName(data.business)
+          chart.removeSerieByName(data.business);
           break;
         case 'chart':
           chart.updateChartOptions(data.options);

@@ -46,8 +46,7 @@ angular.module('strategycanvasFrontendApp')
               var x = d3.scale.ordinal().domain(factorNames).rangeBands([ 0, w ]),
               y = {};
 
-              var line = d3.svg.line(),
-              axis = d3.svg.axis().orient('left');
+              var line = d3.svg.line();
 
               var currentSeriesOrder = chart.series.map(function(serie){ return serie.business;}).join('');
               var doTransition = oldFactors.length > 0 &&  seriesOrder === currentSeriesOrder && (oldFactors.length !== factorNames.length || oldFactors.join('') ===  factorNames.join(''));
@@ -585,7 +584,7 @@ angular.module('strategycanvasFrontendApp')
                     }else if(v < -0.10){
                         point.serie.offerings[point.factorName] = undefined;
                         d3.select(this)
-                      .attr('transform', function(d){ return 'translate('+(x.rangeBand()/2)+',0)';})
+                      .attr('transform', function(){ return 'translate('+(x.rangeBand()/2)+',0)';})
                       .select('path')
                       .attr('d', function(d){ return d3.svg.symbol()
                                                      .type(d.serie.symbol)
