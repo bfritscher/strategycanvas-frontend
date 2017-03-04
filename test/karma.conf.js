@@ -32,9 +32,9 @@ module.exports = function(config) {
       'bower_components/jquery.dragscrollable/dragscrollable.js',
       'bower_components/jquery-mousewheel/jquery.mousewheel.js',
       'bower_components/angular-aria/angular-aria.js',
+      'bower_components/angular-messages/angular-messages.js',
       'bower_components/angular-material/angular-material.js',
       'bower_components/angular-ui-utils/validate.js',
-      'bower_components/angular-messages/angular-messages.js',
       'bower_components/angular-mocks/angular-mocks.js',
       // endbower
       'app/scripts/**/*.js',

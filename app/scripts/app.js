@@ -15,7 +15,6 @@ angular
     'ngCookies',
     'ngRoute',
     'ngSanitize',
-    'ngTouch',
     'ngMessages',
     'ngMaterial',
     'ui.validate'
@@ -58,8 +57,8 @@ angular.forEach(['d'], function(name) {
   angular.module('strategycanvasFrontendApp').directive(ngName, function() {
     return function(scope, element, attrs) {
       attrs.$observe(ngName, function(value) {
-        attrs.$set(name, value); 
+        attrs.$set(name, value);
       });
     };
   });
-});  
+});

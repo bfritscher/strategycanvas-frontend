@@ -23,25 +23,25 @@ angular.module('strategycanvasFrontendApp')
               //root svg
               var svg = elm.find('svg');
               var supportForeignObject = typeof SVGForeignObjectElement !== 'undefined';
-              
-              //d3js ordinal scale only works on simple array 
+
+              //d3js ordinal scale only works on simple array
               var factorNames = chart.factors.map(function(f){return f;});
-              
+
               var delay = oldFactors.length > factorNames.length ? 500 : 0;
               // delay standard transitions if delete factor
-              
-              
-              
+
+
+
               //62 = 10 20 1 svg 1 20 10
               //container_height - 42 = svg
               //margins top, right, bottom left
-              var m = [10, 100 + 41, 100, 41],//[ 2, chart.editCode ? 140 : 31, 31, 31 ],
-                  w = Math.max(100 * factorNames.length + 1, 1000) - m[1] - m[3],
-                  h = Math.min(660, Math.max(400, $(elm).outerHeight()- $(elm).offset().top)) - m[0] - m[2] +21;
+              var m = [ 2, chart.editCode ? 100 : 2, 100, 42 ],
+                  w = Math.max(100*factorNames.length+1, 1000) - m[1] - m[3],
+				        	h = Math.max(430, Math.min(600, $('#mychart').height()-85)) - m[0] - m[2];
               if(svg.length === 0){
-                h = 430 - m[0] - m[2] +21; 
+                h = 430 - m[0] - m[2];
               }
-              
+
 
               var x = d3.scale.ordinal().domain(factorNames).rangeBands([ 0, w ]),
               y = {};
@@ -55,7 +55,7 @@ angular.module('strategycanvasFrontendApp')
                 scope.remoteUpdate = false;
                 doTransition = true;
               }
-              
+
               //TODO: refactor to css?
               function updateBandingBackground(factorName){
                 var i =  factorNames.indexOf(factorName);
@@ -68,7 +68,7 @@ angular.module('strategycanvasFrontendApp')
                 }
                 return ['#f2f9ff', '#f9f9f9'][i % 2 ];
               }
-              
+
               // Returns the path for a given data point.
               function path(serie) {
                 var points = [];
@@ -80,14 +80,14 @@ angular.module('strategycanvasFrontendApp')
                 });
                 return line(points);
               }
-              
+
               function maybeTransiton(selection, additionalCondition){
                 if(doTransition && (additionalCondition === undefined || additionalCondition)){
                   selection = selection.transition().delay(delay).duration(500);
                 }
                 return selection;
               }
-              
+
               // Create a scale for each trait.
               factorNames.forEach(function(factorName) {
                 y[factorName] = d3.scale.linear().domain([-0.1,1.1]).range([ h, 0 ]);
@@ -104,7 +104,7 @@ angular.module('strategycanvasFrontendApp')
               }
               d3.select(elm[0]).select('svg')
               .attr('width', w + m[1] + m[3])
-              .attr('height', h + m[0] + m[2] + 51);
+              .attr('height', h + m[0] + m[2]);
 
               if(chart.editCode){
                 var addFactorGroup = svg.select('g.addfactor');
@@ -114,32 +114,32 @@ angular.module('strategycanvasFrontendApp')
                   .on('click', function (){
                     scope.showAddDialog(d3.event, 'factor');
                   });
-                  
+
                   addFactorGroup.append('svg:rect')
                   .attr('class', 'backgroundFactor')
                   .attr('x', 0)
                   .attr('y', 0);
-                  
+
                   addFactorGroup.append('svg:text')
                   .attr('class', 'mdi mdi-plus')
                   .attr('style', 'font-size:140px; fill: #adc8e3')
-                  .text('\uf3c4');
+                  .text('\uf415');
                 }
-                
+
                 addFactorGroup.select('rect')
                 .attr('width', 100)
                 .attr('height', h)
                 .style('fill', updateBandingBackgroundAdd());
-                
+
                 addFactorGroup.select('text')
                 .attr('transform','translate(0, 0)')
                 .attr('x', -20)
                 .attr('y', h/2 +50);
-                
+
                 addFactorGroup
                 .attr('transform', 'translate(' + (w+2) + ')');
               }
-              
+
               //legend background
               var legendBackground = svg.select('rect.legendbackground');
               if(legendBackground.node() === null){
@@ -151,7 +151,7 @@ angular.module('strategycanvasFrontendApp')
               legendBackground
               .attr('width', w)
               .attr('y', h);
-              
+
               //border
               var backBorder = svg.select('rect.border');
               if(backBorder.node() === null){
@@ -159,14 +159,14 @@ angular.module('strategycanvasFrontendApp')
                 .attr('class', 'border')
                 .attr('x', -1)
                 .attr('y', -1);
-                
+
                 if(chart.editCode){
                   svg.append('svg:text')
                   .attr('class', 'addfactorhelp')
                   .attr('x', 100)
                   .attr('style', 'font-size:100px;fill:#fbfbfb')
                   .text('Add a factor');
-                  
+
                   svg.append('svg:text')
                   .attr('class', 'mdi mdi-arrow-right-bold addfactorhelparrow')
                   .attr('x', 680)
@@ -174,39 +174,39 @@ angular.module('strategycanvasFrontendApp')
                   .text('\uf140');
                 }
               }
-              
+
                 svg.select('.addfactorhelp')
                 .attr('y', h/2 + 30)
                 .style('fill', factorNames.length > 0 ? '#fbfbfb' : '#adc8e3');
-                
+
                 svg.select('.addfactorhelparrow')
                 .attr('y', h/2 + 30)
                 .style('fill', factorNames.length > 0 ? '#fbfbfb' : '#adc8e3');
-              
+
               //animate only on delete delete
               maybeTransiton(backBorder, oldFactors.length > factorNames.length)
               .attr('width', w+2)
               .attr('height', h+2);
-              
+
               var mainAxis = svg.select('g.mainaxis');
               if(mainAxis.node() === null){
                 mainAxis = svg.append('svg:g')
                 .attr('class', 'mainaxis no-select')
                 .attr('transform', 'translate(-40)');
-                
+
                 mainAxis.append('svg:text')
                 .attr('x', 0)
                 .attr('y', 14)
                 .text('High');
-                
+
                 mainAxis.append('svg:text')
                 .attr('class', 'l-offering')
                 .text('Offerings');
-                
+
                 mainAxis.append('svg:text')
                 .attr('class', 'l-factor')
                 .text('Factors of Competition');
-                
+
                 mainAxis.append('svg:text')
                 .attr('class', 'l-low')
                 .attr('x', 0)
@@ -216,23 +216,23 @@ angular.module('strategycanvasFrontendApp')
               .attr('transform', 'rotate(-90, 14, '+ (h/2+29) +')')
               .attr('x', 14)
               .attr('y', h/2+29);
-              
+
               mainAxis.select('.l-factor')
               .attr('x', w/2 - 30)
               .attr('y', h + m[2]);
-              
+
               mainAxis.select('.l-low')
               .attr('y', h-2);
-              
-              
+
+
               //background
               var backgroundGroup = svg.select('.background');
               if(backgroundGroup.node() === null){
                 backgroundGroup = svg.append('svg:g').attr('class', 'background');
               }
-              
-              
-              
+
+
+
               //add background by name
               var backgroundFactor = backgroundGroup.selectAll('.backgroundFactor').data(factorNames, function(d){return d;});
               backgroundFactor.enter()
@@ -246,22 +246,22 @@ angular.module('strategycanvasFrontendApp')
               //factor banding background color update
               backgroundFactor
               .style('fill', updateBandingBackground);
-              
+
               maybeTransiton(backgroundFactor)
               .attr('x',  function(factorName){ return x(factorName);})
               .attr('width', x.rangeBand())
               .attr('height', h);
-              
-              
-              
-              
+
+
+
+
                 // Add foreground lines.
               var foreground = svg.select('g.foreground');
               if(foreground[0][0] === null){
                 foreground = svg.append('svg:g').attr('class', 'foreground');
               }
               var svgPath = foreground.selectAll('.line').data(chart.series);
-                
+
               svgPath.enter().append('svg:path')
               .attr('class', 'line')
               .attr('stroke-dasharray', function(serie){return serie.dash;})
@@ -273,16 +273,16 @@ angular.module('strategycanvasFrontendApp')
               .style('stroke', function(serie){
                 return serie.color;
               });
-              
+
               svgPath.exit().transition().duration(500).style('opacity', 0).remove();
-              
+
               //factors groupHolder
               var factorGroup = svg.select('.factorGroup');
               //other more d3js ways possible?
               if(factorGroup.node() === null){
                 factorGroup = svg.append('svg:g').attr('class', 'factorGroup');
               }
-              
+
               // Add a group element for each trait.
               var factorContainer = factorGroup.selectAll('.factor').data(factorNames, function(d){return d;});
               var factorContainerEnter = factorContainer.enter()
@@ -293,16 +293,16 @@ angular.module('strategycanvasFrontendApp')
                       'transform', function() {
                         return 'translate(' + w + ')';
                       });
-              
+
               //invisible rect to force size of group and be draggable?
               factorContainerEnter.append('svg:rect')
               .attr('class', 'factorSize')
               .attr('x', 0)
               .attr('y', 0)
               .attr('height', h);
-              
-              
-              
+
+
+
               //Add an axis and title.
               var addOfferingHandler = null;
               if(chart.editCode){
@@ -313,7 +313,7 @@ angular.module('strategycanvasFrontendApp')
                   if(d3.event.timeStamp - lastClickTimeStamp < 300){
                     return false;
                   }
-                  
+
                   lastClickTimeStamp = d3.event.timeStamp;
                   if ($(this).data('already')) {
                         $(this).data('already', false);
@@ -321,8 +321,8 @@ angular.module('strategycanvasFrontendApp')
                     } else if (d3.event.type === 'touchstart') {
                         $(this).data('already', true);
                     }
-                  
-                  
+
+
                   var pos = d3.event.changedTouches ? d3.touches(this,  d3.event.changedTouches)[0] : d3.mouse(this);
                   var v = Math.max(0, Math.min(1, y[factorName].invert(pos[1])));
                   scope.$apply(function(){
@@ -330,7 +330,7 @@ angular.module('strategycanvasFrontendApp')
                   });
                 };
               }
-              
+
               factorContainerEnter
               .append('svg:g')
               .attr('class', 'axis')
@@ -342,11 +342,11 @@ angular.module('strategycanvasFrontendApp')
               .on('mousedown', function(){
                 d3.event.stopPropagation();
               });
-              
+
               factorContainer
               .on('touchstart', addOfferingHandler)
               .on('click', addOfferingHandler);
-              
+
               //hate IE... even 10
               if(!supportForeignObject){
                 d3.select(elm[0])
@@ -355,8 +355,8 @@ angular.module('strategycanvasFrontendApp')
                 .enter()
                 .append('html:div')
                 .attr('class', 'iexlegend');
-                
-                 
+
+
                 var pos = $('#mychart .legendbackground').offset();
                 d3.select(elm[0]).selectAll('div.iexlegend')
                 .attr('style', function(factorName){
@@ -376,7 +376,7 @@ angular.module('strategycanvasFrontendApp')
                   }
                 });
               }
-              
+
               factorContainerEnter.select('.axis').append('svg:foreignObject')
               .attr('class', 'xlegend-wrapper')
               .attr('y', h + 20)
@@ -398,28 +398,28 @@ angular.module('strategycanvasFrontendApp')
                   scope.showRemoveDialog(d3.event, 'factor',factorName);
                 }
               });
-              
+
               factorContainer.select('.xlegend-wrapper')
               .attr('width', function(){return x.rangeBand();})
               .attr('y', h + 20);
-              
+
               factorContainer.select('.factorSize')
               .attr('width', x.rangeBand())
               .attr('height', h);
-              
+
               var domainWidth = Math.max(50, x.rangeBand()/3);
-              
+
               factorContainer.select('.domain')
               .attr('y', function(factorName){ return y[factorName](1)-25;})
               .attr('x', (x.rangeBand()-domainWidth)/2)
               .attr('width', domainWidth)
               .attr('height', function(factorName){ return 50+y[factorName](0)-y[factorName](1);});
-              
+
               factorContainer.exit().transition().duration(500).style('opacity', 0).remove();
               backgroundFactor.exit().transition().duration(500).attr('width', 0).attr('x', function(){
                 return parseFloat(d3.select(this).attr('x')) + x.rangeBand()/2;
               }).remove();
-              
+
               //handle factor dragging right-left
               if(chart.editCode){
                 var isDraging = false;
@@ -433,7 +433,7 @@ angular.module('strategycanvasFrontendApp')
                   })
                   .on('dragstart', function (factorName) {
                    isDraging = false;
-                   
+
                     var i = factorNames.indexOf(factorName);
                     //move to top visible
                     var node = d3.select(this).node();
@@ -451,20 +451,20 @@ angular.module('strategycanvasFrontendApp')
                       return x(a) - x(b);
                     });
                     var dragX = x(factorName);
-                    
+
                     foreground.selectAll('.foreground .line').attr('d', path);
                     x.domain(factorNames).rangeBands([ 0, w ]);
-                    
-                    if(!supportForeignObject){ //ie... 
+
+                    if(!supportForeignObject){ //ie...
                       var pos = $('#mychart .legendbackground').offset();
                         d3.select(elm[0]).selectAll('div.iexlegend')
                         .attr('style', function(d){
-                          return 'top:' + (pos.top - 85) + 'px;' + 
+                          return 'top:' + (pos.top - 85) + 'px;' +
                             'left:' + ((d === factorName ? dragX : x(d)) + pos.left-41) + 'px;' +
                             'width:' + x.rangeBand() + 'px;';})
                           .text(String);
                     }
-                    
+
                     factorContainer.filter(':last-child').attr('transform', 'translate('+ dragX + ')');
                     factorContainer.filter(':not(:last-child)').transition().duration(200).ease('linear')
                     .attr('transform',  function(d){ return 'translate(' + x(d) + ')';});
@@ -476,14 +476,14 @@ angular.module('strategycanvasFrontendApp')
                   })
                   .on('dragend', function () {
                     isDraging = false;
-                    
+
                     x.domain(factorNames).rangeBands([ 0, w ]);
-                    
+
                     var t = d3.transition().duration(500);
                     t.selectAll('.factor').attr('transform',function(d) {
                       return 'translate(' + x(d) + ')';
                     });
-                    
+
                     if(!supportForeignObject){
                       var pos = $('#mychart .legendbackground').offset();
                         t.selectAll('div.iexlegend')
@@ -491,8 +491,8 @@ angular.module('strategycanvasFrontendApp')
                           return (x(d) + pos.left-41) + 'px';
                         });
                     }
-                    
-                    
+
+
                     backgroundGroup.selectAll('.backgroundFactor').attr('x',  function(factorName){ return x(factorName);});
                     t.selectAll('.foreground .line').attr('d', path);
                     t.transition().each('end', function(){
@@ -506,15 +506,15 @@ angular.module('strategycanvasFrontendApp')
                   })
                 );
               }//end edit
-    
+
               maybeTransiton(factorContainer).attr(
                   'transform', function(factorName) {
                     return 'translate(' + x(factorName) + ')';
               });
-              
-              
+
+
               //add offering onto domain axis
-              
+
               var marker = factorContainer.selectAll('.dot')
                  .data( function( factorName) {
                   var points = [];
@@ -530,8 +530,8 @@ angular.module('strategycanvasFrontendApp')
                   .attr('transform', function(d){ return 'matrix(0, 0, 0, 0, '+(x.rangeBand()/2)+', '+y[d.factorName](d.serie.offerings[d.factorName])+')';});
               markerEnter.transition().duration(500).ease('elastic', 1.8, 0.45)
                   .attr('transform', function(d){ return 'matrix(1, 0, 0, 1, '+(x.rangeBand()/2)+', '+y[d.factorName](d.serie.offerings[d.factorName])+')';});
-              
-              
+
+
               markerEnter.append('svg:path');
 
               markerEnter.append('svg:rect')
@@ -539,19 +539,19 @@ angular.module('strategycanvasFrontendApp')
               .attr('width', 50)
               .attr('y', -25)
               .attr('height', 50);
-                
+
               marker.exit().remove();
-              
+
               maybeTransiton(marker.select('path'))
               .attr('d', function(d){ return d3.svg.symbol().type(d.serie.symbol).size(function(){return scope.profile.markerSize*10;})();})
               .style('fill', function(d){ return d.serie.color;});
-              
+
               if(chart.editCode){
-              
+
               marker.select('rect')
               .attr('x', -domainWidth/2)
               .attr('width', domainWidth);
-                      
+
               marker.call(d3.behavior.drag().origin(function(point) {
                     return {
                       y : y[point.factorName](point.serie.offerings[point.factorName])
@@ -566,12 +566,12 @@ angular.module('strategycanvasFrontendApp')
                         this.parentNode.appendChild(this);
                       }
                     });
-                    
+
                     d3.event.sourceEvent.stopPropagation(); //we do not want to start drag on factor
-                            
+
                   })
                   .on('drag', function(point){
-                    var v = y[point.factorName].invert(d3.event.y); 
+                    var v = y[point.factorName].invert(d3.event.y);
                     if( v < -0.05 && v >= -0.10){
                       point.serie.offerings[point.factorName] = v;
                       d3.select(this)
@@ -617,13 +617,13 @@ angular.module('strategycanvasFrontendApp')
               }
               maybeTransiton(marker).attr('transform', function(d){ return 'matrix(1, 0, 0, 1, '+(x.rangeBand()/2)+', '+y[d.factorName](d.serie.offerings[d.factorName])+')';});
 
-              
+
               //save length to determine if we want transitions or not next time
               oldFactors = factorNames.slice(0);
               seriesOrder = chart.series.map(function(serie){ return serie.business;}).join('');
-              
+
             }
-scope.$watch('[chart.series, chart.factors, profile]', drawChart, true);//watch
+scope.$watch('[chart.series, chart.factors,chart.dirty, profile]', drawChart, true);//watch
           }
     };
   });

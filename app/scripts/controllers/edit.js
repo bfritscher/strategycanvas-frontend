@@ -8,15 +8,15 @@
  * Controller of the strategycanvasFrontendApp
  */
 angular.module('strategycanvasFrontendApp')
-  .controller('EditCtrl', function ($scope, $http, $location, $routeParams, $window, $mdDialog, $mdSidenav, localDS, chart, log, com) {
+  .controller('EditCtrl', function ($scope, $http, $location, $routeParams, $window, $mdDialog, $mdPanel, $mdSidenav, localDS, chart, log, com) {
     //for now keep it local, if global we have to handle unsubscribe of handlers
-    
+
     $scope.localDS = localDS;
     //TODO change
     $scope.loggedInUser  = loggedInUser;
     //TODO change;
     $scope.baseUri = baseUri;
-    
+
     $scope.chat = {
       round: {}, //TODO handle cleanup
       messages: [],
@@ -30,23 +30,23 @@ angular.module('strategycanvasFrontendApp')
     $scope.profile = {
       markerSize: 24 //TODO: save to localstorage or online?
     };
-    
+
     $scope.locale = {
       chartUntitled: 'Untitled canvas'
     };
-      
+
     $scope.chart = chart;
-        
+
     $scope.notes = {
       width: '0',
       widthOpen: 250
     };
 
-    /*    
+    /*
     $scope.connectedChatUsers = function(){
       return 'TODO';
     };
-    
+
     $scope.notifyChartDescription = function(){
       return 'TODO';
     };
@@ -61,17 +61,17 @@ angular.module('strategycanvasFrontendApp')
     businessNotInUse
     factorNotInUse
     */
-    
+
     $scope.toggleRight = function(){
       $mdSidenav('right').toggle();
     };
-    
+
     $scope.createNewChart = function createNewChart(){
       $location.replace().path('/edit/new');
     };
-    
+
     var body = angular.element(document.body);
-    
+
     $scope.showEditTitle = function showEditTitle($event){
       $mdDialog.show({
         parent: body,
@@ -90,14 +90,17 @@ angular.module('strategycanvasFrontendApp')
         locals: { chartTitle: $scope.chart.title }
       });
     };
-    
+
     $scope.showHandbook = function showHandbook($event){
       $mdDialog.show({
         parent: body,
         clickOutsideToClose : true,
         targetEvent: $event,
         templateUrl: 'handbook.html',
-        controller: function handbookCtrl($scope) {
+        controller: function handbookCtrl($scope, $mdDialog) {
+          $scope.close = function () {
+            $mdDialog.hide();
+          };
           $scope.handbook = {
             urlPrefix : 'views/handbook/',
             pages : [
@@ -112,13 +115,13 @@ angular.module('strategycanvasFrontendApp')
               {name:'About', url: false},
               {name:'Who', url:'blank.html'},
               {name:'Privacy', url:'privacy.html'},
-            ] 
+            ]
           };
           $scope.handbook.activePage = $scope.handbook.pages[0];
         }
       });
     };
-    
+
     $scope.showShareDialog = function showShareDialog($event){
       $mdDialog.show({
         parent: body,
@@ -137,14 +140,29 @@ angular.module('strategycanvasFrontendApp')
         }
       });
     };
-    
-    
+
+
     $scope.showMarkerEditor = function showMarkerEditor($event, serie){
-      var beforeChange = serie.color +  serie.symbol + serie.dash; 
-      $mdDialog.show({
-        parent: body,
-        clickOutsideToClose : true,
+      var beforeChange = serie.color +  serie.symbol + serie.dash;
+      var panelPosition = $mdPanel.newPanelPosition()
+        .relativeTo($event.target)
+        .addPanelPosition('align-start', 'below')
+        .withOffsetY('10px');
+
+      var panelAnimation = $mdPanel.newPanelAnimation()
+        .openFrom($event.target)
+        .withAnimation($mdPanel.animation.SCALE)
+        .duration(150)
+        .closeTo($event.target);
+
+      $mdPanel.open({
+        attachTo: body,
+        clickOutsideToClose: true,
+        escapeToClose: true,
+        focusOnOpen: true,
         hasBackdrop : false,
+        position: panelPosition,
+        animation: panelAnimation,
         targetEvent: $event,
         templateUrl: 'markerEditor.html',
         controller: function markerEditorCtrl($scope, $mdDialog, dashs, chart, serie, top, left) {
@@ -154,7 +172,7 @@ angular.module('strategycanvasFrontendApp')
             left: left,
             colors: chart.colors,
             symbols: chart.symbols,
-            dashs: dashs  
+            dashs: dashs
           };
         },
         locals: {
@@ -170,7 +188,7 @@ angular.module('strategycanvasFrontendApp')
         }
       });
     };
-    
+
     $scope.showRecentDialog = function showRecentDialog($event){
       $mdDialog.show({
         parent: body,
@@ -188,7 +206,7 @@ angular.module('strategycanvasFrontendApp')
               $location.path('/' + item.viewCode);
             }
           };
-          
+
           $scope.close = function() {
             $mdDialog.hide();
           };
@@ -196,13 +214,16 @@ angular.module('strategycanvasFrontendApp')
         locals: { locale: $scope.locale }
       });
     };
-       
+
     $scope.showAddDialog = function showAddDialog($event, type){
       $mdDialog.show({
         parent: body,
         clickOutsideToClose : false,
         targetEvent: $event,
         templateUrl: 'addDialog.html',
+        onComplete: function(scope, element){
+          angular.element(element).find('input').focus();
+        },
         controller: function addDialogCtrl($scope, $mdDialog, chart, type) {
           if(type === 'serie'){
             $scope.title = 'Add a new value curve';
@@ -229,9 +250,9 @@ angular.module('strategycanvasFrontendApp')
         locals: {type: type}
       });
     };
-    
+
     $scope.showRemoveDialog = function showRemoveDialog($event, type, data){
-      
+
       $mdDialog.show({
         parent: body,
         clickOutsideToClose : false,
@@ -254,7 +275,7 @@ angular.module('strategycanvasFrontendApp')
                 newSerie.business = $scope.name;
                 chart.notifySerieRemove(data);
                 chart.notifySerieChange(newSerie)
-                
+
               }
             };
           }
@@ -278,9 +299,9 @@ angular.module('strategycanvasFrontendApp')
         locals: {type: type, data: data}
       });
     };
-    
-    
-    
+
+
+
     $scope.showNewCanvasAlert = function($event){
       var confirm = $mdDialog.confirm()
         .parent(body)
@@ -290,7 +311,7 @@ angular.module('strategycanvasFrontendApp')
         .ok('Create')
         .cancel('Cancel')
         .targetEvent($event);
-        
+
       $mdDialog.show(confirm).then(function() {
         log.event( 'chart', 'new', $scope.chart.viewCode);
         $location.path('/edit/new');
@@ -298,7 +319,7 @@ angular.module('strategycanvasFrontendApp')
         //log cancel?
       });
     };
-    
+
     $scope.showCopyCanvasAlert = function($event){
       var confirm = $mdDialog.confirm()
         .parent(body)
@@ -308,7 +329,7 @@ angular.module('strategycanvasFrontendApp')
         .ok('Copy')
         .cancel('Cancel')
         .targetEvent($event);
-        
+
       $mdDialog.show(confirm).then(function() {
         log.event( 'chart', 'copy', $scope.chart.viewCode);
         //TODO:maybe show spinner
@@ -322,7 +343,7 @@ angular.module('strategycanvasFrontendApp')
         //log cancel?
       });
     };
-    
+
     $scope.showNotFoundAlert = function($event){
       var confirm = $mdDialog.confirm()
         .parent(body)
@@ -332,14 +353,14 @@ angular.module('strategycanvasFrontendApp')
         .ok('Create new canvas')
         .cancel('List recent canvas')
         .targetEvent($event);
-        
+
       $mdDialog.show(confirm).then(function() {
         $scope.createNewChart();
       }, function() {
         $scope.showRecentDialog($event);
       });
     };
-    
+
     $scope.showPermissionDeniedAlert = function($event){
       var confirm = $mdDialog.confirm()
         .parent(body)
@@ -349,14 +370,14 @@ angular.module('strategycanvasFrontendApp')
         .ok('Create new canvas')
         .cancel('List recent canvas')
         .targetEvent($event);
-        
+
       $mdDialog.show(confirm).then(function() {
         $scope.createNewChart();
       }, function() {
         $scope.showRecentDialog($event);
       });
     };
-    
+
     $scope.showDisconnectAlert = function($event){
       var confirm = $mdDialog.alert()
         .parent(body)
@@ -365,14 +386,11 @@ angular.module('strategycanvasFrontendApp')
         .ariaLabel('Lost Connection to Server')
         .ok('Retry')
         .targetEvent($event);
-        
+
       $mdDialog.show(confirm).then(function() {
         //TODO: reconnect
       });
     };
-   
-    
-    /*
 
     //GA watch dialog actions
     for(var key in $scope.dialog){
@@ -390,8 +408,8 @@ angular.module('strategycanvasFrontendApp')
             else if(dialogId === 'valueCurve'){
               dialogId = $scope.temp.alertdialog.ga;
             }
-            
-            
+
+
             var path = $location.path() + '/'+ dialogId +'/';
             if(value){
               $window._gaq.push(['_trackPageview', path + 'open']);
@@ -402,7 +420,7 @@ angular.module('strategycanvasFrontendApp')
         });
       })(key);
     }
-      
+
     $scope.$watch('advancedEntry', function(value, old){
       if(value !== old){
         if(value){
@@ -412,28 +430,17 @@ angular.module('strategycanvasFrontendApp')
         }
       }
     });
-    
-    $scope.$watch('chat.isVisible', function(value, old){
-      if(value !== old){
-        if(value){
-          $window._gaq.push(['_trackPageview', $location.path() + '/chat/open']);
-        }else{
-          $window._gaq.push(['_trackPageview', $location.path() + '/chat/close']);
-        }
-      }
-    });
-    
+
     $scope.$watch('handbook.activePage', function(value, old){
       if(value !== old){
-        $window._gaq.push(['_trackPageview', $location.path() + '/handbook/' + $scope.handbook.activePage.url]);	
+        $window._gaq.push(['_trackPageview', $location.path() + '/handbook/' + $scope.handbook.activePage.url]);
       }
     });
-      
+
     $scope.$watch('chart', function(chart){
       localDS.touchChart(chart);
     }, true);
-      
-     
+
     $scope.$watch('dialog.recent', function(value){
       if(value && $scope.loggedInUser){
         $http({method: 'GET', url: baseUri + 'api/usercharts'})
@@ -443,25 +450,10 @@ angular.module('strategycanvasFrontendApp')
              localDS.save();
            });
          });
-        
+
       }
     });
-    
-    
-    */
-       
-    /*
-    //watch to lazy too make directives/components just for that
-    //always show last message at the bottom
-    $scope.$watch('chat.messages',function(){
-      //hack wait for ng-each :-(?
-      setTimeout(function(){
-        $('#chat-content').scrollTop($('#chat-content').height());
-      }, 100);
-            
-    }, true);
-    */
-        
+
     $scope.downloadCSV = function downloadCSV(){
       //TODO: handle , ' "
       var table = [['factor\\models']];
@@ -474,37 +466,34 @@ angular.module('strategycanvasFrontendApp')
           table[j+1].push(serie.offerings[factor]);
         });
       });
-      
-      
+
+
       var csv = table.map(function(row){
         return row.join(',');
       }).join('\n');
       log.pageview({page: $location.path() + '/csv'});
-      //TODO: use with server or a:download.click for filename 
+      //TODO: use with server or a:download.click for filename
       $window.open('data:application/octet-stream;charset=utf-8,' + encodeURIComponent(csv));
     };
-    
+
     $scope.downloadJSON = function downloadJSON(){
       log.pageview({page: $location.path() + '/json'});
-      //TODO: use with server or a:download.click for filename 
+      //TODO: use with server or a:download.click for filename
       $window.open('data:application/octet-stream;charset=utf-8,' + encodeURIComponent(JSON.stringify($scope.chart)));
     };
-        
+
     var doit;
     $(window).resize(function() {
-        //$('#chat-content').height($(window).height()-117-$('#legends').offset().top);
-        $('#mychart').height($(window).height() - $('#legends').outerHeight() - $('header').outerHeight());
-
-                
+        //$('#mychart').height($(window).height() - $('#legends').outerHeight() - $('header').outerHeight());
         //trigger chart redraw
         clearTimeout(doit);
         doit = setTimeout(function(){
           $scope.$apply(function(){
-             $scope.chart.dirty = !$scope.chart.dirty; 
+             $scope.chart.dirty = !$scope.chart.dirty;
             });
         }, 100);
     });
-    
+
     setTimeout(function(){
       $(window).resize();
     }, 500);
