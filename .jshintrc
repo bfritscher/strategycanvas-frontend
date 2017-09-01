@@ -22,6 +22,8 @@
     "moment": false,
     "d3": false,
     "$": false,
-    "stButtons": false
+    "stButtons": false,
+    "feathers": false,
+    "io": false
   }
 }

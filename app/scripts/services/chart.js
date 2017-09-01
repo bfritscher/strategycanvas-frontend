@@ -8,20 +8,11 @@
  * Service in the strategycanvasFrontendApp.
  */
 angular.module('strategycanvasFrontendApp')
-  .service('chart', function (log, $window) {
+  .service('chart', function (log, $window, com) {
     var self = this;
-    var chart;
-    /* jshint ignore:start */
-    chart = {"id":159546,"viewCode":"Qj2Ww","editCode":"BQULV880mt","title":"Strategy Canvas: Southwest Airlines","description":"Welcome to StrategyCanvas.org!\n\nThis demo canvas was created for you. You can edit it or start from a new empty canvas by clicking the new document icon.\n\nThis tool helps you design a strategy canvas with value curves like they are proposed by in the Blue Ocean Strategy by W. Chan Kim and Renée Mauborgne (2002, 2005)\n\nFor more explanation, check out the handbook (help icon on top).\n\nIn this sample, you can see that:\n\n\"The strategic profile of Southwest Airlines differs dramatically from those of its competitors in the short-haul airline industry. Note how Southwest’s profile has more in common with the car's than with the profile of other airlines.\" (Harvard Business Review, Vol. 80, No. 6, June 2002)\n\nHINT: Live collaborative editing is supported; just share the link with a colleague!\n","factors":["meals","price","lounges","seating choices","hub connectivity","friendly service","speed","frequent departures"],"series":[{"id":159572,"business":"Car","color":"#7f7f7f","symbol":"circle","dash":"0","offerings":{"frequent departures":1,"speed":0,"hub connectivity":0,"lounges":0,"seating choices":0,"friendly service":0,"meals":0,"price":0.089},"$$hashKey":"017"},{"id":159573,"business":"Other airlines","color":"#e377c2","symbol":"circle","dash":"0","offerings":{"seating choices":0.9301204819277108,"meals":0.5,"hub connectivity":0.52,"speed":0.709,"lounges":0.6,"frequent departures":null,"price":0.671,"friendly service":0.74},"$$hashKey":"01A"},{"id":159571,"business":"Southwest","color":"#7f7f7f","symbol":"circle","dash":"0","offerings":{"price":0.15,"speed":1,"seating choices":0.05,"lounges":0.101,"hub connectivity":0.04,"frequent departures":0.8,"friendly service":0.91,"meals":0.179},"$$hashKey":"01D"}],"lastUpdated":"2015-03-20T09:58:16Z","dirty":false};
-    /* jshint ignore:end */
-    this.series = chart.series;
-    this.factors = chart.factors;
-    this.title = chart.title;
-    this.description = chart.description;
-    this.lastSentChartDescription = chart.description;
-    this.editCode = 123;
-    this.viewCode = 123;
 
+    this.series = [];
+    this.factors = [];
     this.colors = d3.scale.category10().range();
     this.symbols = d3.svg.symbolTypes;
 
@@ -37,10 +28,6 @@ angular.module('strategycanvasFrontendApp')
         name: ''
       },
 
-    };
-
-    var com = {
-      send: function(){}
     };
 
     var diffMatchPath;
@@ -168,10 +155,6 @@ angular.module('strategycanvasFrontendApp')
       return serie;
     }
 
-    //external operations available on chart
-    this.registerCom = function(c){
-      com = c;
-    };
 
     this.manualMoveSerieToTop = function(serie){
       moveSerieToTop(serie);
@@ -302,14 +285,19 @@ angular.module('strategycanvasFrontendApp')
 
     this.notifyOfferingChange = function(serie, factor, value){
       self.setOfferingBySerie(serie, factor, value);
-
-      com.send('edit', {
-          action: 'offering',
-          editCode: self.editCode,
-          business: serie.business,
-          factor: factor,
-          value: value
+      com.offerings.patch(
+        null,
+        {
+          value: value || null
+        },
+        {
+          query: {
+            edit_code: self.editCode,
+            factor: factor,
+            business: serie.business
+          }
         });
+
     };
 
     this.notifySerieAdd = function(name){
@@ -401,50 +389,18 @@ angular.module('strategycanvasFrontendApp')
     this.notifyChartDescription = throttle(notifyChartDescription, 1500);
 
 
-/*
-  //TODO change
-    $scope.grailsEvents = new grails.Events(baseUri, {
-      onError: function(response){
-        $scope.dialog.disconnected = true;
-      }
-    });
-    $scope.grailsEvents.onopen = function(){
-      $scope.$apply(function(){
-        $scope.dialog.disconnected = false;
+    this.loadChart = function() {
+      return com.loadChart(this).then(function(chart){
+        console.log(chart);
+        if (chart) {
+          self.series = chart.series;
+          self.factors = chart.factors;
+          self.title = chart.title;
+          self.description = chart.description;
+          self.lastSentChartDescription = chart.description;
+          self.editCode = chart.edit_code;
+          self.viewCode = chart.view_code;
+        }
       });
     };
-
- //LoadChart
-    $http({method: 'POST', url: baseUri + 'api/chartjson', data: {viewCode: $routeParams.viewCode, editCode: $routeParams.editCode}})
-      .then(function(resp) {
-          if($routeParams.editCode && $routeParams.editCode !== resp.data.editCode && resp.data.editCode){
-            //close all dialogs first because of aterfacts
-            $location.replace().path('/edit/' + data.editCode);
-            return;
-          }
-
-          //subscribe to edit notifications
-
-          //all ready, apply loaded data
-        $scope.chart = resp.data;
-        if(self.title === 'Strategy Canvas: Southwest Airlines'){
-          $scope.notes.width = 250;
-        }
-        $scope.temp.lastSentChartDescription = self.description;
-      })
-      .error(function(data, status, headers, config) {
-          if(status === 404){
-            $scope.dialog.notfound = true;
-          }else if(status === 403){
-            if($scope.loggedInUser){
-              $scope.dialog.permissiondenied = true;
-            }else{
-              $scope.dialog.login = true;
-            }
-          }
-      });
-
-
-
-*/
   });

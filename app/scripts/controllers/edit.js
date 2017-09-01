@@ -8,7 +8,7 @@
  * Controller of the strategycanvasFrontendApp
  */
 angular.module('strategycanvasFrontendApp')
-  .controller('EditCtrl', function ($scope, $http, $location, $routeParams, $window, $mdDialog, $mdPanel, $mdSidenav, localDS, chart, log, com) {
+  .controller('EditCtrl', function ($scope, $http, $location, $routeParams, $window, $mdDialog, $mdPanel, $mdSidenav, localDS, chart, log) {
     //for now keep it local, if global we have to handle unsubscribe of handlers
 
     $scope.localDS = localDS;
@@ -355,22 +355,25 @@ angular.module('strategycanvasFrontendApp')
       });
     };
 
-    $scope.showNotFoundAlert = function($event){
+    $scope.showNotFoundAlert = function(){
       var confirm = $mdDialog.confirm()
         .parent(body)
         .title('404 Not Found')
         .content('Sorry, but the canvas you were looking for seems not to exist. Do you want to create a new one?')
         .ariaLabel('404 Not Found')
         .ok('Create new canvas')
-        .cancel('List recent canvas')
-        .targetEvent($event);
+        .cancel('List recent canvas');
 
       $mdDialog.show(confirm).then(function() {
         $scope.createNewChart();
       }, function() {
-        $scope.showRecentDialog($event);
+        $scope.showRecentDialog();
       });
     };
+
+    $scope.$on('notfound', function (){
+      $scope.showNotFoundAlert();
+    });
 
     $scope.showPermissionDeniedAlert = function($event){
       var confirm = $mdDialog.confirm()
@@ -435,9 +438,14 @@ angular.module('strategycanvasFrontendApp')
       $window.open('data:application/octet-stream;charset=utf-8,' + encodeURIComponent(JSON.stringify($scope.chart)));
     };
 
+    chart.loadChart().then(function(){
+      if (chart.title === 'Strategy Canvas: Southwest Airlines'){
+        $scope.notes.width = 250;
+      }
+    });
+
     var doit;
     $(window).resize(function() {
-        //$('#mychart').height($(window).height() - $('#legends').outerHeight() - $('header').outerHeight());
         //trigger chart redraw
         clearTimeout(doit);
         doit = setTimeout(function(){
